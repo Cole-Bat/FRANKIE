@@ -13,6 +13,8 @@
 
 class DriveSubsystem : public frc2::SubsystemBase {
  public:
+  DriveSubsystem();
+  
   void Drive(double x, double y, double z);
   /**
    * Will be called periodically whenever the CommandScheduler runs.
@@ -20,7 +22,7 @@ class DriveSubsystem : public frc2::SubsystemBase {
   
   // requires the declarations of the various drivetrain algorithims
   
-   void Periodic() override;
+  void Periodic() override;
   // put something about the pose here
   /**
    * Will be called periodically whenever the CommandScheduler runs during
