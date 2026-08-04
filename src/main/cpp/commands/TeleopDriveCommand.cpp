@@ -16,14 +16,15 @@ TeleopDriveCommand::TeleopDriveCommand(DriveSubsystem* drive, frc2::CommandXboxC
 
 void TeleopDriveCommand::Execute(){
   
-  Cart raw_joystick { m_controller->GetLeftX(), m_controller->GetLeftY()};
+  Cart raw_xy { m_controller->GetLeftX(), m_controller->GetLeftY()};
 
-  Polar pol_joystick = PolarOut(raw_joystick);
-  pol_joystick.magnitude = ApplyDeadband(pol_joystick.magnitude, OperatorConstants::DeadbandValue);
-  pol_joystick.magnitude = ApplyCurve(pol_joystick.magnitude, OperatorConstants::DriveCurve);
-  Cart final_joystick = CartOut(pol_joystick);
-  
-  m_drive->Drive(final_joystick.x, final_joystick.y, m_controller-> GetRightX());
+  Polar pol_xy = PolarOut(raw_xy);
+  pol_xy.magnitude = ApplyDeadband(pol_xy.magnitude, OperatorConstants::DeadbandValue);
+  pol_xy.magnitude = ApplyCurve(pol_xy.magnitude, OperatorConstants::DriveCurve);
+  Cart final_xy = CartOut(pol_xy);
+  double final_z = ApplyCurve(m_controller-> GetRightX(), OperatorConstants::RotCurve);
+
+  m_drive->Drive(final_xy.x, final_xy.y, final_z);
 
 }
 
