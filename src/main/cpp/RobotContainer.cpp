@@ -13,13 +13,12 @@
 RobotContainer::RobotContainer() {
   // Configure the button bindings
   ConfigureBindings();
-
-  // Initialize all of your commands and subsystems here
-  // set a default command defintion with m_drive
-  m_drive.SetDefaultCommand(TeleopDriveCommand(&m_drive, &m_driverController).ToPtr());
 }
 
 void RobotContainer::ConfigureBindings() {
+  // might not need a toptr in default command
+  
+  m_drive.SetDefaultCommand(TeleopDriveCommand(&m_drive, &m_driverController).ToPtr());
   // Need to configure the SysID buttons, and the pose reset button
   
   // Configure your trigger bindings here

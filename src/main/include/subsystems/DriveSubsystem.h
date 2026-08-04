@@ -32,6 +32,8 @@ class DriveSubsystem : public frc2::SubsystemBase {
 
  private:
   
+  
+  
   std::array<double, 3> m_wheelSpeedVector; 
   std::array<double, 3> InverseKinematics(double x, double y, double z);
   std::array<double, 3> NormalizedKinematics(const std::array<double, 3>& vector);
@@ -66,6 +68,7 @@ class DriveSubsystem : public frc2::SubsystemBase {
   rev::spark::SparkRelativeEncoder wheelAEncoder{ m_motorALead.GetEncoder()};
   rev::spark::SparkRelativeEncoder wheelBEncoder{ m_motorBLead.GetEncoder()};
   rev::spark::SparkRelativeEncoder wheelCEncoder{ m_motorCLead.GetEncoder()};
+
 
   // also need an IMU sensor
 
