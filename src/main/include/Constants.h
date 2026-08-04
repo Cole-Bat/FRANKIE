@@ -17,5 +17,8 @@
 namespace OperatorConstants {
 
 inline constexpr int kDriverControllerPort = 0;
+inline constexpr double DeadbandValue = 0.04;
+inline constexpr double DriveCurve = 2.0;
+
 
 }  // namespace OperatorConstants

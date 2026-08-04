@@ -8,25 +8,33 @@
 
 #include "commands/Autos.h"
 #include "commands/ExampleCommand.h"
+#include "commands/TeleopDriveCommand.h"
 
 RobotContainer::RobotContainer() {
-  // Initialize all of your commands and subsystems here
-
   // Configure the button bindings
   ConfigureBindings();
+
+  // Initialize all of your commands and subsystems here
+  // set a default command defintion with m_drive
+  m_drive.SetDefaultCommand(TeleopDriveCommand(&m_drive, &m_driverController).ToPtr());
 }
 
 void RobotContainer::ConfigureBindings() {
+  // Need to configure the SysID buttons, and the pose reset button
+  
   // Configure your trigger bindings here
 
   // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
+  /*
   frc2::Trigger([this] {
     return m_subsystem.ExampleCondition();
   }).OnTrue(ExampleCommand(&m_subsystem).ToPtr());
 
+
   // Schedule `ExampleMethodCommand` when the Xbox controller's B button is
   // pressed, cancelling on release.
   m_driverController.B().WhileTrue(m_subsystem.ExampleMethodCommand());
+  */
 }
 
 frc2::CommandPtr RobotContainer::GetAutonomousCommand() {
