@@ -18,6 +18,9 @@ class DriveSubsystem : public frc2::SubsystemBase {
  public:
   DriveSubsystem();
   
+  frc2::CommandPtr SysIdQuasistatic(frc2::sysid::Direction direction);
+  frc2::CommandPtr SysIdDynamic(frc2::sysid::Direction direction);
+
   void ConfigureControllers();
   
   void Drive(double x, double y, double z);
@@ -34,7 +37,6 @@ class DriveSubsystem : public frc2::SubsystemBase {
    * simulation.
    */
   void SimulationPeriodic() override;
-
 
  private:
   

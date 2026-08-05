@@ -23,7 +23,6 @@ class TeleopDriveCommand
     : public frc2::CommandHelper<frc2::Command, TeleopDriveCommand> {
  public:
   /**
-   * Creates a new ExampleCommand.
    *
    * @param subsystem The subsystem used by this command.
    */

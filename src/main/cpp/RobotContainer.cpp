@@ -7,7 +7,6 @@
 #include <frc2/command/button/Trigger.h>
 
 #include "commands/Autos.h"
-#include "commands/ExampleCommand.h"
 #include "commands/TeleopDriveCommand.h"
 
 RobotContainer::RobotContainer() {
@@ -19,24 +18,24 @@ void RobotContainer::ConfigureBindings() {
   // might not need a toptr in default command
   
   m_drive.SetDefaultCommand(TeleopDriveCommand(&m_drive, &m_driverController));
-  // Need to configure the SysID buttons, and the pose reset button
+  // Need to configure the pose reset button
   
   // Configure your trigger bindings here
 
-  // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-  /*
-  frc2::Trigger([this] {
-    return m_subsystem.ExampleCondition();
-  }).OnTrue(ExampleCommand(&m_subsystem).ToPtr());
+  (m_driverController.LeftBumper() && m_driverController.Y())
+      .WhileTrue(m_drive.SysIdQuasistatic(frc2::sysid::Direction::kForward));
+  
+  (m_driverController.LeftBumper() && (m_driverController.B()))
+      .WhileTrue(m_drive.SysIdQuasistatic(frc2::sysid::Direction::kReverse));
+  
+  (m_driverController.LeftBumper() && m_driverController.A())
+      .WhileTrue(m_drive.SysIdDynamic(frc2::sysid::Direction::kForward));
+  
+  (m_driverController.LeftBumper() && m_driverController.X())
+      .WhileTrue(m_drive.SysIdDynamic(frc2::sysid::Direction::kReverse));            
 
-
-  // Schedule `ExampleMethodCommand` when the Xbox controller's B button is
-  // pressed, cancelling on release.
-  m_driverController.B().WhileTrue(m_subsystem.ExampleMethodCommand());
-  */
 }
 
 frc2::CommandPtr RobotContainer::GetAutonomousCommand() {
-  // An example command will be run in autonomous
-  return autos::ExampleAuto(&m_subsystem);
+  return m_drive.Run([] {});
 }
