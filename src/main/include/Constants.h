@@ -22,7 +22,7 @@ inline constexpr int kDriverControllerPort = 0;
 // JOYSTICK SIGNAL PROCESSING
 inline constexpr double DeadbandValue = 0.04;
 inline constexpr double DriveCurve = 2.0;
-inline constexpr double RotCurve = 2.0;
+inline constexpr double RotCurve = 3.0;
 inline constexpr double MaxValue = 0.8;
 
 // CAN ID CONSTANTS
@@ -65,10 +65,10 @@ inline constexpr double WheelBTheta = 210.0;
 inline constexpr double WheelCTheta = 330.0;
 inline constexpr double WheelDiaMeter = 0.2032; // 8inch wheel in meters
 inline constexpr double DriveGearRatio = 10.71; // 10.71:1 toughbox mini
+inline constexpr double WheelPosRadius = 0.25; // in meters to the center also equal for all 3 wheels
 
 // ELECTRICAL CONSTANTS
 inline constexpr double nominalVoltage = 12.0;
-
-
+inline constexpr double dtLoop = 0.020; //seconds that the periodic function is called
 
 }  // namespace OperatorConstants

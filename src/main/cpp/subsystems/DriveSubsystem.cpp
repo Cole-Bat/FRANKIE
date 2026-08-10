@@ -3,6 +3,9 @@
 // the WPILib BSD license file in the root directory of this project.
 
 #include "subsystems/DriveSubsystem.h"
+#include <frc/geometry/Pose2d.h>
+#include <frc/smartdashboard/Field2d.h>
+#include <frc/smartdashboard/SmartDashboard.h>
 #include <frc2/command/sysid/SysIdRoutine.h>
 #include <rev/config/SparkMaxConfig.h>
 #include <networktables/NetworkTable.h>
@@ -11,6 +14,7 @@
 
 #include "cmath"
 #include "units/angle.h"
+#include "units/time.h"
 #include <array>
 
 DriveSubsystem::DriveSubsystem()  // Initialization area for private member variables
@@ -56,6 +60,7 @@ DriveSubsystem::DriveSubsystem()  // Initialization area for private member vari
 
 { //Constructor for Drivesystem public
   ConfigureControllers();
+  frc::SmartDashboard::PutData("Field", &m_field);
   auto inst = nt::NetworkTableInstance::GetDefault();
   auto table = inst.GetTable("datatable");
   m_aPubEncoder = table->GetDoubleTopic("Encoder A").Publish();
@@ -66,9 +71,30 @@ DriveSubsystem::DriveSubsystem()  // Initialization area for private member vari
   m_cPubSim = table->GetDoubleTopic("Encoder C Sim").Publish();
 }
 
-void DriveSubsystem::Drive(double target_x, double target_y, double target_z) {
+void DriveSubsystem::Periodic() {
+  // Implementation of subsystem periodic method goes here.
+  m_aPubEncoder.Set(m_wheelAEncoder.GetVelocity());
+  m_bPubEncoder.Set(m_wheelBEncoder.GetVelocity());
+  m_cPubEncoder.Set(m_wheelCEncoder.GetVelocity());
+}
+
+void DriveSubsystem::SimulationPeriodic() {
+  // Implementation of subsystem simulation periodic method goes here.
+  m_motorASim.SetVelocity(m_wheelSpeedVector[0] * 2500);
+  m_motorBSim.SetVelocity(m_wheelSpeedVector[1] * 2500);
+  m_motorCSim.SetVelocity(m_wheelSpeedVector[2] * 2500);
   
-  m_wheelSpeedVector = InverseKinematics(target_x, target_y, target_z);
+  m_aPubSim.Set(m_motorASim.GetVelocity());
+  m_bPubSim.Set(m_motorBSim.GetVelocity());
+  m_cPubSim.Set(m_motorCSim.GetVelocity());
+  
+  KiwiPoseEstimator(m_motorASim.GetVelocity(), m_motorBSim.GetVelocity(), m_motorCSim.GetVelocity(), OperatorConstants::WheelPosRadius);
+  m_field.SetRobotPose(m_Pose2dSim);
+}
+
+void DriveSubsystem::Drive(double target_x, double target_y, double target_rot) {
+  
+  m_wheelSpeedVector = InverseKinematics(target_x, target_y, target_rot);
   m_wheelSpeedVector = NormalizedKinematics(m_wheelSpeedVector);
   
   m_motorALead.Set(m_wheelSpeedVector[0]);
@@ -76,16 +102,16 @@ void DriveSubsystem::Drive(double target_x, double target_y, double target_z) {
   m_motorCLead.Set(m_wheelSpeedVector[2]);
 }
 
-std::array<double, 3> DriveSubsystem::InverseKinematics(double x, double y, double z) {
+std::array<double, 3> DriveSubsystem::InverseKinematics(double x, double y, double rot) {
       
   return {x * std::cos(std::numbers::pi * OperatorConstants::WheelATheta / 180) + 
-          y * std::sin(std::numbers::pi * OperatorConstants::WheelATheta / 180) + z,
+          y * std::sin(std::numbers::pi * OperatorConstants::WheelATheta / 180) + rot,
 
           x * std::cos(std::numbers::pi * OperatorConstants::WheelBTheta / 180) + 
-          y * std::sin(std::numbers::pi * OperatorConstants::WheelBTheta / 180) + z,
+          y * std::sin(std::numbers::pi * OperatorConstants::WheelBTheta / 180) + rot,
 
           x * std::cos(std::numbers::pi * OperatorConstants::WheelCTheta / 180) + 
-          y * std::sin(std::numbers::pi * OperatorConstants::WheelCTheta / 180) + z };
+          y * std::sin(std::numbers::pi * OperatorConstants::WheelCTheta / 180) + rot };
 
 }
 
@@ -113,23 +139,27 @@ frc2::CommandPtr DriveSubsystem::SysIdDynamic(frc2::sysid::Direction direction) 
   return m_sysIdRoutine.Dynamic(direction);
 }
 
-void DriveSubsystem::Periodic() {
-  // Implementation of subsystem periodic method goes here.
-  m_aPubEncoder.Set(m_wheelAEncoder.GetVelocity());
-  m_bPubEncoder.Set(m_wheelBEncoder.GetVelocity());
-  m_cPubEncoder.Set(m_wheelCEncoder.GetVelocity());
-}
+void DriveSubsystem::KiwiPoseEstimator(const double va, const double vb, const double vc, const double radius) {
 
-void DriveSubsystem::SimulationPeriodic() {
-  // Implementation of subsystem simulation periodic method goes here.
-  m_motorASim.SetVelocity(m_wheelSpeedVector[0] * 5676);
-  m_motorBSim.SetVelocity(m_wheelSpeedVector[1] * 5676);
-  m_motorCSim.SetVelocity(m_wheelSpeedVector[2] * 5676);
+  double pCF = (OperatorConstants::WheelDiaMeter * std::numbers::pi) / OperatorConstants::DriveGearRatio;
+  double vCF = pCF / 60.0; //number of seconds in a minute for m/s
   
-  m_aPubSim.Set(m_motorASim.GetVelocity());
-  m_bPubSim.Set(m_motorBSim.GetVelocity());
-  m_cPubSim.Set(m_motorCSim.GetVelocity());
-  
+  double velocityX =  va * vCF * cos((std::numbers::pi * OperatorConstants::WheelATheta / 180) + m_Pose2dSim.Rotation().Radians().value()) +
+                      vb * vCF * cos((std::numbers::pi * OperatorConstants::WheelBTheta / 180) + m_Pose2dSim.Rotation().Radians().value()) +
+                      vc * vCF * cos((std::numbers::pi * OperatorConstants::WheelCTheta / 180) + m_Pose2dSim.Rotation().Radians().value());
+
+  double velocityY =  va * vCF * sin((std::numbers::pi * OperatorConstants::WheelATheta / 180) + m_Pose2dSim.Rotation().Radians().value()) +
+                      vb * vCF * sin((std::numbers::pi * OperatorConstants::WheelBTheta / 180) + m_Pose2dSim.Rotation().Radians().value()) +
+                      vc * vCF * sin((std::numbers::pi * OperatorConstants::WheelCTheta / 180) + m_Pose2dSim.Rotation().Radians().value());  
+ 
+  double velocityW = (va + vb + vc) * vCF / (3 * radius);
+
+  units::length::meter_t dX = units::length::meter_t(velocityX * OperatorConstants::dtLoop);
+  units::length::meter_t dY = units::length::meter_t(velocityY * OperatorConstants::dtLoop);
+  frc::Rotation2d theta{units::angle::radian_t(velocityW * OperatorConstants::dtLoop)};
+
+  m_Pose2dSim = m_Pose2dSim + frc::Transform2d{dX, dY, theta};
+
 }
 
 void DriveSubsystem::ConfigureControllers() {

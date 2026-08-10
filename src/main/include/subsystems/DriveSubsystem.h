@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include <frc/geometry/Pose2d.h>
+#include <frc/smartdashboard/Field2d.h>
+#include <frc/smartdashboard/SmartDashboard.h>
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/SubsystemBase.h>
 #include <frc2/command/sysid/SysIdRoutine.h>
@@ -13,6 +16,8 @@
 
 #include <rev/SparkMax.h>
 #include <rev/sim/SparkMaxSim.h>
+
+#include "units/time.h"
 
 #include "Constants.h"
 #include <array>
@@ -27,7 +32,7 @@ class DriveSubsystem : public frc2::SubsystemBase {
 
   void ConfigureControllers();
   
-  void Drive(double x, double y, double z);
+  void Drive(double x, double y, double rot);
   /**
    * Will be called periodically whenever the CommandScheduler runs.
    */
@@ -40,6 +45,10 @@ class DriveSubsystem : public frc2::SubsystemBase {
    */
   void SimulationPeriodic() override;
 
+  // Pose for the SIM
+  frc::Pose2d m_Pose2dSim;
+  frc::Field2d m_field;
+
   nt::DoublePublisher m_aPubEncoder;
   nt::DoublePublisher m_bPubEncoder;
   nt::DoublePublisher m_cPubEncoder;
@@ -50,8 +59,10 @@ class DriveSubsystem : public frc2::SubsystemBase {
  private:
   
   std::array<double, 3> m_wheelSpeedVector{}; 
-  std::array<double, 3> InverseKinematics(double x, double y, double z);
+  std::array<double, 3> InverseKinematics(const double x, const double y, const double rot);
   std::array<double, 3> NormalizedKinematics(const std::array<double, 3>& vector);
+
+  void KiwiPoseEstimator(const double va, const double vb, const double vc, const double radius);
 
   // Lead Motor Objects
   rev::spark::SparkMax m_motorALead;
@@ -78,8 +89,6 @@ class DriveSubsystem : public frc2::SubsystemBase {
 
   // System ID object
   frc2::sysid::SysIdRoutine m_sysIdRoutine;
-  
-
 
   // also need an IMU sensor
 

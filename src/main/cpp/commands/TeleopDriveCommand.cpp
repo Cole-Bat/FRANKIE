@@ -16,28 +16,29 @@ TeleopDriveCommand::TeleopDriveCommand(DriveSubsystem* drive, frc2::CommandXboxC
 
 void TeleopDriveCommand::Execute(){
   
-  Frame raw_xyz { m_controller->GetLeftX(), m_controller->GetLeftY(), m_controller-> GetRightX()};
-  Frame robot_xyz { -raw_xyz.y, -raw_xyz.x, raw_xyz.z};
+  Frame raw_xyrot { m_controller->GetLeftX(), m_controller->GetLeftY(), m_controller-> GetRightX()};
+  // x and y are swapped with negatives to match the field coord system
+  Frame robot_xyrot { -raw_xyrot.y, -raw_xyrot.x, raw_xyrot.rot};
   
-  Polar pol_xyz = PolarOut(robot_xyz);
-  pol_xyz.magnitude = ApplyDeadband(pol_xyz.magnitude, OperatorConstants::DeadbandValue);
-  pol_xyz.z = ApplyDeadband(pol_xyz.z, OperatorConstants::DeadbandValue);
-  pol_xyz.magnitude = ApplyCurve(pol_xyz.magnitude, OperatorConstants::DriveCurve);
-  pol_xyz.z = ApplyCurve(pol_xyz.z, OperatorConstants::DriveCurve);
-  Frame final_xyz = CartOut(pol_xyz);
+  Polar pol_xyrot = PolarOut(robot_xyrot);
+  pol_xyrot.magnitude = ApplyDeadband(pol_xyrot.magnitude, OperatorConstants::DeadbandValue);
+  pol_xyrot.rot = ApplyDeadband(pol_xyrot.rot, OperatorConstants::DeadbandValue);
+  pol_xyrot.magnitude = ApplyCurve(pol_xyrot.magnitude, OperatorConstants::DriveCurve);
+  pol_xyrot.rot = ApplyCurve(pol_xyrot.rot, OperatorConstants::DriveCurve);
+  Frame final_xyrot = CartOut(pol_xyrot);
 
-  m_drive->Drive(final_xyz.x, final_xyz.y, final_xyz.z);
-
+  m_drive->Drive(final_xyrot.x, final_xyrot.y, final_xyrot.rot);
+  
 }
 
 TeleopDriveCommand::Polar TeleopDriveCommand::PolarOut(const Frame& frame) {
     return {std::hypot(frame.x, frame.y), 
-      units::radian_t{std::atan2(frame.y, frame.x)}, frame.z};
+      units::radian_t{std::atan2(frame.y, frame.x)}, frame.rot};
 }
 
 TeleopDriveCommand::Frame TeleopDriveCommand::CartOut(const Polar& polar) {
     return {units::math::cos(polar.angle) * polar.magnitude,
-      units::math::sin(polar.angle) * polar.magnitude, polar.z};
+      units::math::sin(polar.angle) * polar.magnitude, polar.rot};
 }
 
 double TeleopDriveCommand::ApplyDeadband(double mag, double deadband) {
