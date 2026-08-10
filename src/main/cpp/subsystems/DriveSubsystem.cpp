@@ -63,9 +63,14 @@ void DriveSubsystem::Drive(double target_x, double target_y, double target_z) {
 
 std::array<double, 3> DriveSubsystem::InverseKinematics(double x, double y, double z) {
       
-  return {x * std::cos(OperatorConstants::WheelATheta) + y * std::sin(OperatorConstants::WheelATheta) + z,
-          x * std::cos(OperatorConstants::WheelBTheta) + y * std::sin(OperatorConstants::WheelBTheta) + z,
-          x * std::cos(OperatorConstants::WheelCTheta) + y * std::sin(OperatorConstants::WheelCTheta) + z };
+  return {x * std::cos(std::numbers::pi * OperatorConstants::WheelATheta / 180) + 
+          y * std::sin(std::numbers::pi * OperatorConstants::WheelATheta / 180) - z,
+
+          x * std::cos(std::numbers::pi * OperatorConstants::WheelBTheta / 180) + 
+          y * std::sin(std::numbers::pi * OperatorConstants::WheelBTheta / 180) - z,
+          
+          x * std::cos(std::numbers::pi * OperatorConstants::WheelCTheta / 180) + 
+          y * std::sin(std::numbers::pi * OperatorConstants::WheelCTheta / 180) - z };
 
 }
 

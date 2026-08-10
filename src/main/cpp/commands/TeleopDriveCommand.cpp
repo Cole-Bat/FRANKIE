@@ -28,10 +28,6 @@ void TeleopDriveCommand::Execute(){
 
   m_drive->Drive(final_xyz.x, final_xyz.y, final_xyz.z);
 
-  //m_drive->Drive(robot_xyz.x, robot_xyz.y, robot_xyz.z);
-  printf("%f \n %f \n %f \n", raw_xyz.x, raw_xyz.y, raw_xyz.z);
-  printf("%f \n %f \n %f \n", robot_xyz.x, robot_xyz.y, robot_xyz.z);
-
 }
 
 TeleopDriveCommand::Polar TeleopDriveCommand::PolarOut(const Frame& frame) {
