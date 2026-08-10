@@ -7,8 +7,12 @@
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/SubsystemBase.h>
 #include <frc2/command/sysid/SysIdRoutine.h>
+#include <networktables/NetworkTable.h>
+#include <networktables/NetworkTableInstance.h>
+#include <networktables/DoubleTopic.h>
 
 #include <rev/SparkMax.h>
+#include <rev/sim/SparkMaxSim.h>
 
 #include "Constants.h"
 #include <array>
@@ -28,8 +32,6 @@ class DriveSubsystem : public frc2::SubsystemBase {
    * Will be called periodically whenever the CommandScheduler runs.
    */
   
-  // requires the declarations of the various drivetrain algorithims
-  
   void Periodic() override;
   // put something about the pose here
   /**
@@ -38,11 +40,16 @@ class DriveSubsystem : public frc2::SubsystemBase {
    */
   void SimulationPeriodic() override;
 
+  nt::DoublePublisher m_aPubEncoder;
+  nt::DoublePublisher m_bPubEncoder;
+  nt::DoublePublisher m_cPubEncoder;
+  nt::DoublePublisher m_aPubSim;
+  nt::DoublePublisher m_bPubSim;
+  nt::DoublePublisher m_cPubSim;
+
  private:
   
-  frc2::sysid::SysIdRoutine m_sysIdRoutine;
-  
-  std::array<double, 3> m_wheelSpeedVector; 
+  std::array<double, 3> m_wheelSpeedVector{}; 
   std::array<double, 3> InverseKinematics(double x, double y, double z);
   std::array<double, 3> NormalizedKinematics(const std::array<double, 3>& vector);
 
@@ -60,6 +67,18 @@ class DriveSubsystem : public frc2::SubsystemBase {
   rev::spark::SparkRelativeEncoder m_wheelAEncoder;
   rev::spark::SparkRelativeEncoder m_wheelBEncoder;
   rev::spark::SparkRelativeEncoder m_wheelCEncoder;
+
+  // Motor Physics Model
+  frc::DCMotor m_neoMotors;
+
+  // Motor Objects for Simulation
+  rev::spark::SparkMaxSim m_motorASim;
+  rev::spark::SparkMaxSim m_motorBSim;
+  rev::spark::SparkMaxSim m_motorCSim;
+
+  // System ID object
+  frc2::sysid::SysIdRoutine m_sysIdRoutine;
+  
 
 
   // also need an IMU sensor

@@ -5,12 +5,15 @@
 #include "subsystems/DriveSubsystem.h"
 #include <frc2/command/sysid/SysIdRoutine.h>
 #include <rev/config/SparkMaxConfig.h>
+#include <networktables/NetworkTable.h>
+#include <networktables/NetworkTableInstance.h>
+#include <networktables/DoubleTopic.h>
 
 #include "cmath"
 #include "units/angle.h"
 #include <array>
 
-DriveSubsystem::DriveSubsystem()  // Initialization area
+DriveSubsystem::DriveSubsystem()  // Initialization area for private member variables
   : m_motorALead{ OperatorConstants::MotorALeadID, rev::spark::SparkLowLevel::MotorType::kBrushless},
     m_motorBLead{ OperatorConstants::MotorBLeadID, rev::spark::SparkLowLevel::MotorType::kBrushless},
     m_motorCLead{ OperatorConstants::MotorCLeadID, rev::spark::SparkLowLevel::MotorType::kBrushless},
@@ -20,6 +23,10 @@ DriveSubsystem::DriveSubsystem()  // Initialization area
     m_wheelAEncoder{ m_motorALead.GetEncoder()},
     m_wheelBEncoder{ m_motorBLead.GetEncoder()},
     m_wheelCEncoder{ m_motorCLead.GetEncoder()},
+    m_neoMotors{frc::DCMotor::NEO(2)},
+    m_motorASim{ &m_motorALead, &m_neoMotors},
+    m_motorBSim{ &m_motorBLead, &m_neoMotors},
+    m_motorCSim{ &m_motorCLead, &m_neoMotors},
     m_sysIdRoutine(
       frc2::sysid::Config {1_V / 1_s, 7_V, 10_s, nullptr},
       frc2::sysid::Mechanism {
@@ -47,8 +54,16 @@ DriveSubsystem::DriveSubsystem()  // Initialization area
       }
     )
 
-{
+{ //Constructor for Drivesystem public
   ConfigureControllers();
+  auto inst = nt::NetworkTableInstance::GetDefault();
+  auto table = inst.GetTable("datatable");
+  m_aPubEncoder = table->GetDoubleTopic("Encoder A").Publish();
+  m_bPubEncoder = table->GetDoubleTopic("Encoder B").Publish();
+  m_cPubEncoder = table->GetDoubleTopic("Encoder C").Publish();
+  m_aPubSim = table->GetDoubleTopic("Encoder A Sim").Publish();
+  m_bPubSim = table->GetDoubleTopic("Encoder B Sim").Publish();
+  m_cPubSim = table->GetDoubleTopic("Encoder C Sim").Publish();
 }
 
 void DriveSubsystem::Drive(double target_x, double target_y, double target_z) {
@@ -64,13 +79,13 @@ void DriveSubsystem::Drive(double target_x, double target_y, double target_z) {
 std::array<double, 3> DriveSubsystem::InverseKinematics(double x, double y, double z) {
       
   return {x * std::cos(std::numbers::pi * OperatorConstants::WheelATheta / 180) + 
-          y * std::sin(std::numbers::pi * OperatorConstants::WheelATheta / 180) - z,
+          y * std::sin(std::numbers::pi * OperatorConstants::WheelATheta / 180) + z,
 
           x * std::cos(std::numbers::pi * OperatorConstants::WheelBTheta / 180) + 
-          y * std::sin(std::numbers::pi * OperatorConstants::WheelBTheta / 180) - z,
-          
+          y * std::sin(std::numbers::pi * OperatorConstants::WheelBTheta / 180) + z,
+
           x * std::cos(std::numbers::pi * OperatorConstants::WheelCTheta / 180) + 
-          y * std::sin(std::numbers::pi * OperatorConstants::WheelCTheta / 180) - z };
+          y * std::sin(std::numbers::pi * OperatorConstants::WheelCTheta / 180) + z };
 
 }
 
@@ -100,10 +115,21 @@ frc2::CommandPtr DriveSubsystem::SysIdDynamic(frc2::sysid::Direction direction) 
 
 void DriveSubsystem::Periodic() {
   // Implementation of subsystem periodic method goes here.
+  m_aPubEncoder.Set(m_wheelAEncoder.GetVelocity());
+  m_bPubEncoder.Set(m_wheelBEncoder.GetVelocity());
+  m_cPubEncoder.Set(m_wheelCEncoder.GetVelocity());
 }
 
 void DriveSubsystem::SimulationPeriodic() {
   // Implementation of subsystem simulation periodic method goes here.
+  m_motorASim.SetVelocity(m_wheelSpeedVector[0] * 5676);
+  m_motorBSim.SetVelocity(m_wheelSpeedVector[1] * 5676);
+  m_motorCSim.SetVelocity(m_wheelSpeedVector[2] * 5676);
+  
+  m_aPubSim.Set(m_motorASim.GetVelocity());
+  m_bPubSim.Set(m_motorBSim.GetVelocity());
+  m_cPubSim.Set(m_motorCSim.GetVelocity());
+  
 }
 
 void DriveSubsystem::ConfigureControllers() {

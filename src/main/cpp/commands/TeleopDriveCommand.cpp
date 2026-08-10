@@ -17,7 +17,7 @@ TeleopDriveCommand::TeleopDriveCommand(DriveSubsystem* drive, frc2::CommandXboxC
 void TeleopDriveCommand::Execute(){
   
   Frame raw_xyz { m_controller->GetLeftX(), m_controller->GetLeftY(), m_controller-> GetRightX()};
-  Frame robot_xyz { -raw_xyz.y, -raw_xyz.x, -raw_xyz.z};
+  Frame robot_xyz { -raw_xyz.y, -raw_xyz.x, raw_xyz.z};
   
   Polar pol_xyz = PolarOut(robot_xyz);
   pol_xyz.magnitude = ApplyDeadband(pol_xyz.magnitude, OperatorConstants::DeadbandValue);
