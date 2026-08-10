@@ -21,9 +21,9 @@ void TeleopDriveCommand::Execute(){
   
   Polar pol_xyz = PolarOut(robot_xyz);
   pol_xyz.magnitude = ApplyDeadband(pol_xyz.magnitude, OperatorConstants::DeadbandValue);
-  pol_xyz.magnitude = ApplyDeadband(pol_xyz.z, OperatorConstants::DeadbandValue);
+  pol_xyz.z = ApplyDeadband(pol_xyz.z, OperatorConstants::DeadbandValue);
   pol_xyz.magnitude = ApplyCurve(pol_xyz.magnitude, OperatorConstants::DriveCurve);
-  pol_xyz.magnitude = ApplyCurve(pol_xyz.z, OperatorConstants::DriveCurve);
+  pol_xyz.z = ApplyCurve(pol_xyz.z, OperatorConstants::DriveCurve);
   Frame final_xyz = CartOut(pol_xyz);
 
   m_drive->Drive(final_xyz.x, final_xyz.y, final_xyz.z);
