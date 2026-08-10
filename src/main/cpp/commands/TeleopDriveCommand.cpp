@@ -16,39 +16,41 @@ TeleopDriveCommand::TeleopDriveCommand(DriveSubsystem* drive, frc2::CommandXboxC
 
 void TeleopDriveCommand::Execute(){
   
-  Cart raw_xy { m_controller->GetLeftX(), m_controller->GetLeftY()};
-  /*
-  Polar pol_xy = PolarOut(raw_xy);
-  pol_xy.magnitude = ApplyDeadband(pol_xy.magnitude, OperatorConstants::DeadbandValue); // can be configured on the controllers
-  pol_xy.magnitude = ApplyCurve(pol_xy.magnitude, OperatorConstants::DriveCurve);
-  Cart final_xy = CartOut(pol_xy);
-  */
-  //ApplyCurve(m_controller-> GetRightX(), OperatorConstants::RotCurve); need to preserve axis direction
-  double final_z = m_controller-> GetRightX();
-  Cart final_xy = raw_xy;
+  Frame raw_xyz { m_controller->GetLeftX(), m_controller->GetLeftY(), m_controller-> GetRightX()};
+  Frame robot_xyz { -raw_xyz.y, -raw_xyz.x, -raw_xyz.z};
+  
+  Polar pol_xyz = PolarOut(robot_xyz);
+  pol_xyz.magnitude = ApplyDeadband(pol_xyz.magnitude, OperatorConstants::DeadbandValue);
+  pol_xyz.magnitude = ApplyDeadband(pol_xyz.z, OperatorConstants::DeadbandValue);
+  pol_xyz.magnitude = ApplyCurve(pol_xyz.magnitude, OperatorConstants::DriveCurve);
+  pol_xyz.magnitude = ApplyCurve(pol_xyz.z, OperatorConstants::DriveCurve);
+  Frame final_xyz = CartOut(pol_xyz);
 
-  m_drive->Drive(final_xy.x, final_xy.y, final_z);
-  printf("%f \n %f \n %f \n", final_xy.x, final_xy.y, final_z);
+  m_drive->Drive(final_xyz.x, final_xyz.y, final_xyz.z);
+
+  //m_drive->Drive(robot_xyz.x, robot_xyz.y, robot_xyz.z);
+  printf("%f \n %f \n %f \n", raw_xyz.x, raw_xyz.y, raw_xyz.z);
+  printf("%f \n %f \n %f \n", robot_xyz.x, robot_xyz.y, robot_xyz.z);
 
 }
 
-TeleopDriveCommand::Polar TeleopDriveCommand::PolarOut(const Cart& cart) {
-    return {std::hypot(cart.x, cart.y), 
-      units::radian_t{std::atan2(cart.y, cart.x)}};
+TeleopDriveCommand::Polar TeleopDriveCommand::PolarOut(const Frame& frame) {
+    return {std::hypot(frame.x, frame.y), 
+      units::radian_t{std::atan2(frame.y, frame.x)}, frame.z};
 }
 
-TeleopDriveCommand::Cart TeleopDriveCommand::CartOut(const Polar& polar) {
+TeleopDriveCommand::Frame TeleopDriveCommand::CartOut(const Polar& polar) {
     return {units::math::cos(polar.angle) * polar.magnitude,
-      units::math::sin(polar.angle) * polar.magnitude};
+      units::math::sin(polar.angle) * polar.magnitude, polar.z};
 }
 
 double TeleopDriveCommand::ApplyDeadband(double mag, double deadband) {
-    if (mag < deadband) return 0.0;
-    return (mag - deadband) / (1.0 - deadband);
+    if (std::abs(mag) < deadband) return 0.0;
+    return std::copysign((std::abs(mag) - deadband) / (1.0 - deadband), mag);
 }
 
 double TeleopDriveCommand::ApplyCurve(double mag, double curve) {
-    return std::pow(mag, curve);
+    return std::copysign(std::pow(std::abs(mag), curve), mag);
 }
 
 bool TeleopDriveCommand::IsFinished() {

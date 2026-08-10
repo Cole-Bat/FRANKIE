@@ -60,9 +60,9 @@ inline constexpr double FBC_I = 0.0;
 inline constexpr double FBC_D = 0.0;
 
 // MECHANICAL CONSTANTS
-inline constexpr double WheelATheta = 0.0;
-inline constexpr double WheelBTheta = 120.0;
-inline constexpr double WheelCTheta = 240.0;
+inline constexpr double WheelATheta = 90.0;
+inline constexpr double WheelBTheta = 210.0;
+inline constexpr double WheelCTheta = 330.0;
 inline constexpr double WheelDiaMeter = 0.2032; // 8inch wheel in meters
 inline constexpr double DriveGearRatio = 10.71; // 10.71:1 toughbox mini
 

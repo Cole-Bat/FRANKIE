@@ -34,12 +34,12 @@ class TeleopDriveCommand
  private:
   DriveSubsystem* m_drive;
   frc2::CommandXboxController* m_controller;
-  struct Polar {double magnitude; units::radian_t angle; };
-  struct Cart {double x; double y; };
+  struct Polar {double magnitude; units::radian_t angle; double z; };
+  struct Frame {double x; double y; double z; };
 
   double ApplyDeadband(double mag, double deadband);
   double ApplyCurve(double mag, double curve);
-  Polar PolarOut(const Cart& cart);
-  Cart CartOut(const Polar& polar);
+  Polar PolarOut(const Frame& frame);
+  Frame CartOut(const Polar& polar);
 
 };
