@@ -53,7 +53,7 @@ DriveSubsystem::DriveSubsystem()  // Initialization area
 
 void DriveSubsystem::Drive(double target_x, double target_y, double target_z) {
   
-  m_wheelSpeedVector = DriveSubsystem::InverseKinematics(target_x, target_y, target_z);
+  m_wheelSpeedVector = InverseKinematics(target_x, target_y, target_z);
   m_wheelSpeedVector = NormalizedKinematics(m_wheelSpeedVector);
   
   m_motorALead.Set(m_wheelSpeedVector[0]);

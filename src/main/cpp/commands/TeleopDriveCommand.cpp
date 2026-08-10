@@ -17,14 +17,18 @@ TeleopDriveCommand::TeleopDriveCommand(DriveSubsystem* drive, frc2::CommandXboxC
 void TeleopDriveCommand::Execute(){
   
   Cart raw_xy { m_controller->GetLeftX(), m_controller->GetLeftY()};
-
+  /*
   Polar pol_xy = PolarOut(raw_xy);
-  pol_xy.magnitude = ApplyDeadband(pol_xy.magnitude, OperatorConstants::DeadbandValue);
+  pol_xy.magnitude = ApplyDeadband(pol_xy.magnitude, OperatorConstants::DeadbandValue); // can be configured on the controllers
   pol_xy.magnitude = ApplyCurve(pol_xy.magnitude, OperatorConstants::DriveCurve);
   Cart final_xy = CartOut(pol_xy);
-  double final_z = ApplyCurve(m_controller-> GetRightX(), OperatorConstants::RotCurve);
+  */
+  //ApplyCurve(m_controller-> GetRightX(), OperatorConstants::RotCurve); need to preserve axis direction
+  double final_z = m_controller-> GetRightX();
+  Cart final_xy = raw_xy;
 
   m_drive->Drive(final_xy.x, final_xy.y, final_z);
+  printf("%f \n %f \n %f \n", final_xy.x, final_xy.y, final_z);
 
 }
 

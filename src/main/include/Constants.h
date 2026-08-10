@@ -26,12 +26,12 @@ inline constexpr double RotCurve = 2.0;
 inline constexpr double MaxValue = 0.8;
 
 // CAN ID CONSTANTS
-inline constexpr int MotorALeadID = 10;
-inline constexpr int MotorAFollowID = 11;
-inline constexpr int MotorBLeadID = 12;
-inline constexpr int MotorBFollowID = 13;
-inline constexpr int MotorCLeadID = 14;
-inline constexpr int MotorCFollowID = 15;
+inline constexpr int MotorALeadID = 15;
+inline constexpr int MotorAFollowID = 12;
+inline constexpr int MotorBLeadID = 11;
+inline constexpr int MotorBFollowID = 10;
+inline constexpr int MotorCLeadID = 13;
+inline constexpr int MotorCFollowID = 14;
 
 // PLANT INVERSION CONSTANTS
 inline constexpr double FFA_Ks = 0.0;
