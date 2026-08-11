@@ -2,7 +2,9 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
+#include <frc/kinematics/ChassisSpeeds.h>
 #include "commands/TeleopDriveCommand.h"
+#include <units/velocity.h>
 
 #include "cmath"
 #include "units/math.h"
@@ -25,10 +27,10 @@ void TeleopDriveCommand::Execute(){
   pol_xyrot.rot = ApplyDeadband(pol_xyrot.rot, OperatorConstants::DeadbandValue);
   pol_xyrot.magnitude = ApplyCurve(pol_xyrot.magnitude, OperatorConstants::DriveCurve);
   pol_xyrot.rot = ApplyCurve(pol_xyrot.rot, OperatorConstants::DriveCurve);
-  Frame final_xyrot = CartOut(pol_xyrot);
+  frc::ChassisSpeeds m_commandSpeeds = CartOut(pol_xyrot);
 
-  m_drive->Drive(final_xyrot.x, final_xyrot.y, final_xyrot.rot);
-  
+  m_drive->Drive(m_commandSpeeds);
+
 }
 
 TeleopDriveCommand::Polar TeleopDriveCommand::PolarOut(const Frame& frame) {
@@ -36,9 +38,14 @@ TeleopDriveCommand::Polar TeleopDriveCommand::PolarOut(const Frame& frame) {
       units::radian_t{std::atan2(frame.y, frame.x)}, frame.rot};
 }
 
-TeleopDriveCommand::Frame TeleopDriveCommand::CartOut(const Polar& polar) {
-    return {units::math::cos(polar.angle) * polar.magnitude,
-      units::math::sin(polar.angle) * polar.magnitude, polar.rot};
+frc::ChassisSpeeds TeleopDriveCommand::CartOut(const Polar& polar) {
+    
+  units::velocity::meters_per_second_t vx{units::math::cos(polar.angle) * polar.magnitude};
+  units::velocity::meters_per_second_t vy{units::math::sin(polar.angle) * polar.magnitude};
+  units::angular_velocity::radians_per_second_t omega{polar.rot};
+
+  return { vx, vy, omega};
+
 }
 
 double TeleopDriveCommand::ApplyDeadband(double mag, double deadband) {

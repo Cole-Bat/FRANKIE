@@ -5,6 +5,7 @@
 #pragma once
 
 #include <frc/geometry/Pose2d.h>
+#include <frc/kinematics/ChassisSpeeds.h>
 #include <frc/smartdashboard/Field2d.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc2/command/CommandPtr.h>
@@ -32,7 +33,7 @@ class DriveSubsystem : public frc2::SubsystemBase {
 
   void ConfigureControllers();
   
-  void Drive(double x, double y, double rot);
+  void Drive(const frc::ChassisSpeeds& speeds);
   /**
    * Will be called periodically whenever the CommandScheduler runs.
    */
@@ -58,8 +59,9 @@ class DriveSubsystem : public frc2::SubsystemBase {
 
  private:
   
+  frc::ChassisSpeeds m_driveSpeeds; 
   std::array<double, 3> m_wheelSpeedVector{}; 
-  std::array<double, 3> InverseKinematics(const double x, const double y, const double rot);
+  std::array<double, 3> InverseKinematics(const frc::ChassisSpeeds& driveSpeeds);
   std::array<double, 3> NormalizedKinematics(const std::array<double, 3>& vector);
 
   void KiwiPoseEstimator(const double va, const double vb, const double vc, const double radius);
