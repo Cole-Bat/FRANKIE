@@ -25,7 +25,7 @@ inline constexpr int kDriverControllerPort = 0;
 inline constexpr double DeadbandValue = 0.04;
 inline constexpr double DriveCurve = 2.0;
 inline constexpr double RotCurve = 3.0;
-inline constexpr double MaxValue = 1.0;
+inline constexpr double velScale = 0.8;
 inline constexpr double omegaScale = 0.5; // must be between 0.0 and 1.0
 
 // CAN ID CONSTANTS
@@ -69,6 +69,7 @@ inline constexpr double WheelCTheta = 330.0;
 inline constexpr double WheelDiaMeter = 0.2032; // 8inch wheel in meters
 inline constexpr double DriveGearRatio = 10.71; // 10.71:1 toughbox mini
 inline constexpr double WheelPosRadius = 0.25; // in meters to the center also equal for all 3 wheels
+inline constexpr units::velocity::meters_per_second_t maxRobotVelocity{1.6154}; // (m/s) 
 inline constexpr units::velocity::meters_per_second_t maxRobotVelocityX{1.3989}; // (m/s)
 inline constexpr units::velocity::meters_per_second_t maxRobotVelocityY{1.6154}; // (m/s)
 inline constexpr units::angular_velocity::radians_per_second_t maxRobotVelocityOmega{6.4614}; // (rad/s)

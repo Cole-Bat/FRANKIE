@@ -39,10 +39,10 @@ TeleopDriveCommand::Polar TeleopDriveCommand::PolarOut(const Frame& frame) {
 }
 
 frc::ChassisSpeeds TeleopDriveCommand::CartOut(const Polar& polar) {
-    
-  units::velocity::meters_per_second_t vx{units::math::cos(polar.angle) * polar.magnitude};
-  units::velocity::meters_per_second_t vy{units::math::sin(polar.angle) * polar.magnitude};
-  units::angular_velocity::radians_per_second_t omega{polar.rot};
+
+  units::velocity::meters_per_second_t vx{units::math::cos(polar.angle) * polar.magnitude * OperatorConstants::maxRobotVelocityX};
+  units::velocity::meters_per_second_t vy{units::math::sin(polar.angle) * polar.magnitude * OperatorConstants::maxRobotVelocityY};
+  units::angular_velocity::radians_per_second_t omega{polar.rot * OperatorConstants::maxRobotVelocityOmega * OperatorConstants::omegaScale};
 
   return { vx, vy, omega};
 

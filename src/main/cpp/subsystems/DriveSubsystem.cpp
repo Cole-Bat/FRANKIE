@@ -81,9 +81,9 @@ void DriveSubsystem::Periodic() {
 
 void DriveSubsystem::SimulationPeriodic() {
   // Implementation of subsystem simulation periodic method goes here.
-  m_motorASim.SetVelocity(m_wheelSpeeds.a * double(OperatorConstants::maxRobotVelocityY));
-  m_motorBSim.SetVelocity(m_wheelSpeeds.b * double(OperatorConstants::maxRobotVelocityY));
-  m_motorCSim.SetVelocity(m_wheelSpeeds.c * double(OperatorConstants::maxRobotVelocityY));
+  m_motorASim.SetVelocity(m_wheelSpeeds.a * double(OperatorConstants::maxRobotVelocity));
+  m_motorBSim.SetVelocity(m_wheelSpeeds.b * double(OperatorConstants::maxRobotVelocity));
+  m_motorCSim.SetVelocity(m_wheelSpeeds.c * double(OperatorConstants::maxRobotVelocity));
   
   m_aPubSim.Set(m_motorASim.GetVelocity());
   m_bPubSim.Set(m_motorBSim.GetVelocity());
@@ -96,6 +96,7 @@ void DriveSubsystem::SimulationPeriodic() {
 void DriveSubsystem::Drive(const frc::ChassisSpeeds& speeds) {
 
   // might want a teleop drive and an auto drive
+  // need controller objects and set reference for the auto drive
 
   m_driveSpeeds = speeds;
   
@@ -103,46 +104,44 @@ void DriveSubsystem::Drive(const frc::ChassisSpeeds& speeds) {
   m_wheelSpeeds = NormalizedKinematics(m_wheelSpeedArray);
   
   //Set requires Duty Cycle values
-  m_motorALead.Set(m_wheelSpeeds.a);
-  m_motorBLead.Set(m_wheelSpeeds.b);
-  m_motorCLead.Set(m_wheelSpeeds.c);
+  m_motorALead.Set(m_wheelSpeeds.a / OperatorConstants::maxRobotVelocity.value());
+  m_motorBLead.Set(m_wheelSpeeds.b / OperatorConstants::maxRobotVelocity.value());
+  m_motorCLead.Set(m_wheelSpeeds.c / OperatorConstants::maxRobotVelocity.value());
 }
 
 std::array<double, 3> DriveSubsystem::InverseKinematics(const frc::ChassisSpeeds& driveSpeeds) {
   
-  //create kinematics util folder
-  //need a function that can convert velocity values into the appropriate duty cycle values
+  //create kinematics util folder maybe
   //also need a forward kinematics function
 
   constexpr double degToRad = std::numbers::pi / 180;
 
-  return {double(driveSpeeds.vx * std::cos(OperatorConstants::WheelATheta * degToRad)) + 
-          double(driveSpeeds.vy * std::sin(OperatorConstants::WheelATheta * degToRad)) + 
-          double(driveSpeeds.omega),
+  return {double(driveSpeeds.vx * std::cos(OperatorConstants::WheelATheta * degToRad) + 
+                 driveSpeeds.vy * std::sin(OperatorConstants::WheelATheta * degToRad) + 
+                units::velocity::meters_per_second_t{(driveSpeeds.omega.value() * OperatorConstants::WheelPosRadius)}),
 
-          double(driveSpeeds.vx * std::cos(OperatorConstants::WheelBTheta * degToRad)) + 
-          double(driveSpeeds.vy * std::sin(OperatorConstants::WheelBTheta * degToRad)) + 
-          double(driveSpeeds.omega),
-
-          double(driveSpeeds.vx * std::cos(OperatorConstants::WheelCTheta * degToRad)) + 
-          double(driveSpeeds.vy * std::sin(OperatorConstants::WheelCTheta * degToRad)) + 
-          double(driveSpeeds.omega) };
+          double(driveSpeeds.vx * std::cos(OperatorConstants::WheelBTheta * degToRad) + 
+                 driveSpeeds.vy * std::sin(OperatorConstants::WheelBTheta * degToRad) + 
+                units::velocity::meters_per_second_t{(driveSpeeds.omega.value() * OperatorConstants::WheelPosRadius)}),
+          
+          double(driveSpeeds.vx * std::cos(OperatorConstants::WheelCTheta * degToRad) + 
+                 driveSpeeds.vy * std::sin(OperatorConstants::WheelCTheta * degToRad) + 
+                units::velocity::meters_per_second_t{(driveSpeeds.omega.value() * OperatorConstants::WheelPosRadius)})
+  };
 
 }
 
 DriveSubsystem::WheelDouble DriveSubsystem::NormalizedKinematics(const std::array<double, 3>& vector) {
-  
-  // change max value to max velocity
 
   auto maxIterator = std::max_element(vector.begin(), vector.end(), [] (double a, double b) {
     return std::abs(a) < std:: abs(b);
   });
   double maxSpeed = std::abs(*maxIterator);
   
-  if (maxSpeed > OperatorConstants::MaxValue) 
-  return {vector[0] * ( OperatorConstants::MaxValue / maxSpeed ),
-          vector[1] * ( OperatorConstants::MaxValue / maxSpeed ),
-          vector[2] * ( OperatorConstants::MaxValue / maxSpeed )};
+  if (maxSpeed > OperatorConstants::maxRobotVelocity.value()) 
+  return {vector[0] * ( OperatorConstants::maxRobotVelocity.value() / maxSpeed ),
+          vector[1] * ( OperatorConstants::maxRobotVelocity.value() / maxSpeed ),
+          vector[2] * ( OperatorConstants::maxRobotVelocity.value() / maxSpeed )};
 
   return {vector[0], vector[1], vector[2]};
 
@@ -157,6 +156,7 @@ frc2::CommandPtr DriveSubsystem::SysIdDynamic(frc2::sysid::Direction direction) 
 }
 
 void DriveSubsystem::KiwiPoseEstimator(const double va, const double vb, const double vc, const double radius) {
+
 
   double degToRad = std::numbers::pi / 180;
   double pCF = (OperatorConstants::WheelDiaMeter * std::numbers::pi) / OperatorConstants::DriveGearRatio;
