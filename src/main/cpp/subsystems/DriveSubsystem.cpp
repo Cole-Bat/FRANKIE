@@ -81,9 +81,9 @@ void DriveSubsystem::Periodic() {
 
 void DriveSubsystem::SimulationPeriodic() {
   // Implementation of subsystem simulation periodic method goes here.
-  m_motorASim.SetVelocity(m_wheelSpeedVector[0] * 5676);
-  m_motorBSim.SetVelocity(m_wheelSpeedVector[1] * 5676);
-  m_motorCSim.SetVelocity(m_wheelSpeedVector[2] * 5676);
+  m_motorASim.SetVelocity(m_wheelSpeeds.a * double(OperatorConstants::maxRobotVelocityY));
+  m_motorBSim.SetVelocity(m_wheelSpeeds.b * double(OperatorConstants::maxRobotVelocityY));
+  m_motorCSim.SetVelocity(m_wheelSpeeds.c * double(OperatorConstants::maxRobotVelocityY));
   
   m_aPubSim.Set(m_motorASim.GetVelocity());
   m_bPubSim.Set(m_motorBSim.GetVelocity());
@@ -95,19 +95,24 @@ void DriveSubsystem::SimulationPeriodic() {
 
 void DriveSubsystem::Drive(const frc::ChassisSpeeds& speeds) {
 
+  // might want a teleop drive and an auto drive
+
   m_driveSpeeds = speeds;
   
-  m_wheelSpeedVector = InverseKinematics(m_driveSpeeds);
-  m_wheelSpeedVector = NormalizedKinematics(m_wheelSpeedVector);
+  m_wheelSpeedArray = InverseKinematics(speeds);
+  m_wheelSpeeds = NormalizedKinematics(m_wheelSpeedArray);
   
-  m_motorALead.Set(m_wheelSpeedVector[0]);
-  m_motorBLead.Set(m_wheelSpeedVector[1]);
-  m_motorCLead.Set(m_wheelSpeedVector[2]);
+  //Set requires Duty Cycle values
+  m_motorALead.Set(m_wheelSpeeds.a);
+  m_motorBLead.Set(m_wheelSpeeds.b);
+  m_motorCLead.Set(m_wheelSpeeds.c);
 }
 
 std::array<double, 3> DriveSubsystem::InverseKinematics(const frc::ChassisSpeeds& driveSpeeds) {
   
-  //the doubles need to be changes to velocity values once a solid conversion can be determined
+  //create kinematics util folder
+  //need a function that can convert velocity values into the appropriate duty cycle values
+  //also need a forward kinematics function
 
   constexpr double degToRad = std::numbers::pi / 180;
 
@@ -125,8 +130,10 @@ std::array<double, 3> DriveSubsystem::InverseKinematics(const frc::ChassisSpeeds
 
 }
 
-std::array<double, 3>DriveSubsystem::NormalizedKinematics(const std::array<double, 3>& vector) {
+DriveSubsystem::WheelDouble DriveSubsystem::NormalizedKinematics(const std::array<double, 3>& vector) {
   
+  // change max value to max velocity
+
   auto maxIterator = std::max_element(vector.begin(), vector.end(), [] (double a, double b) {
     return std::abs(a) < std:: abs(b);
   });
@@ -137,7 +144,7 @@ std::array<double, 3>DriveSubsystem::NormalizedKinematics(const std::array<doubl
           vector[1] * ( OperatorConstants::MaxValue / maxSpeed ),
           vector[2] * ( OperatorConstants::MaxValue / maxSpeed )};
 
-  return vector;
+  return {vector[0], vector[1], vector[2]};
 
 }
 
@@ -157,9 +164,9 @@ void DriveSubsystem::KiwiPoseEstimator(const double va, const double vb, const d
   units::length::meter_t radius_m{radius};
   units::time::second_t dt{OperatorConstants::dtLoop};
 
-  units::velocity::meters_per_second_t velocityA =  va * vCF;
-  units::velocity::meters_per_second_t velocityB =  vb * vCF;
-  units::velocity::meters_per_second_t velocityC =  vc * vCF;
+  units::velocity::meters_per_second_t velocityA{va};
+  units::velocity::meters_per_second_t velocityB{vb};
+  units::velocity::meters_per_second_t velocityC{vc};
   units::velocity::meters_per_second_t velocityRot = (velocityA + velocityB + velocityC) / 3.0;
 
   units::velocity::meters_per_second_t velocityVectorX = 

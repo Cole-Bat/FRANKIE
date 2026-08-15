@@ -59,10 +59,12 @@ class DriveSubsystem : public frc2::SubsystemBase {
 
  private:
   
+  struct WheelDouble {double a; double b; double c; };
+  WheelDouble m_wheelSpeeds;
   frc::ChassisSpeeds m_driveSpeeds; 
-  std::array<double, 3> m_wheelSpeedVector{}; 
+  std::array<double, 3> m_wheelSpeedArray{}; 
   std::array<double, 3> InverseKinematics(const frc::ChassisSpeeds& driveSpeeds);
-  std::array<double, 3> NormalizedKinematics(const std::array<double, 3>& vector);
+  WheelDouble NormalizedKinematics(const std::array<double, 3>& vector);
 
   void KiwiPoseEstimator(const double va, const double vb, const double vc, const double radius);
 
