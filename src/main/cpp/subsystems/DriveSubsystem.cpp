@@ -37,8 +37,8 @@ DriveSubsystem::DriveSubsystem()  // Initialization area for private member vari
       frc2::sysid::Mechanism {
         [this] (units::volt_t voltage) {
           m_motorALead.SetVoltage(voltage);
-          m_motorBLead.SetVoltage(voltage * -0.5);
-          m_motorCLead.SetVoltage(voltage * -0.5);
+          m_motorBLead.SetVoltage(voltage * -0.5); 
+          m_motorCLead.SetVoltage(voltage * -0.5); 
         }, 
         [this](frc::sysid::SysIdRoutineLog* log) {
           // bus voltage * applied output to get the voltage at the motor
@@ -242,8 +242,8 @@ void DriveSubsystem::ConfigureControllers() {
   rev::spark::SparkMaxConfig BFConfig;
     BFConfig.Follow(m_motorBLead,false);
 
-  m_motorBLead.Configure(BLConfig, rev::ResetMode::kNoResetSafeParameters, rev::PersistMode::kNoPersistParameters);
-  m_motorBFollow.Configure(BFConfig, rev::ResetMode::kNoResetSafeParameters, rev::PersistMode::kNoPersistParameters);  
+  m_motorBLead.Configure(BLConfig, rev::ResetMode::kNoResetSafeParameters, rev::PersistMode::kPersistParameters);
+  m_motorBFollow.Configure(BFConfig, rev::ResetMode::kNoResetSafeParameters, rev::PersistMode::kPersistParameters);  
 
   //everything configured in one object for wheel C
   rev::spark::SparkMaxConfig CLConfig;

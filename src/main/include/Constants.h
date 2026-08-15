@@ -23,7 +23,7 @@ inline constexpr int kDriverControllerPort = 0;
 inline constexpr double DeadbandValue = 0.04;
 inline constexpr double DriveCurve = 2.0;
 inline constexpr double RotCurve = 3.0;
-inline constexpr double MaxValue = 0.8;
+inline constexpr double MaxValue = 1.0;
 
 // CAN ID CONSTANTS
 inline constexpr int MotorALeadID = 15;
@@ -34,28 +34,28 @@ inline constexpr int MotorCLeadID = 13;
 inline constexpr int MotorCFollowID = 14;
 
 // PLANT INVERSION CONSTANTS
-inline constexpr double FFA_Ks = 0.0;
-inline constexpr double FFA_Kv = 0.0;
-inline constexpr double FFA_Ka = 0.0;
+inline constexpr double FFA_Ks = 0.40068; 
+inline constexpr double FFA_Kv = 1.9736;
+inline constexpr double FFA_Ka = 0.1967;
 
-inline constexpr double FFB_Ks = 0.0;
-inline constexpr double FFB_Kv = 0.0;
-inline constexpr double FFB_Ka = 0.0;
+inline constexpr double FFB_Ks = 0.26755;
+inline constexpr double FFB_Kv = 1.5894;
+inline constexpr double FFB_Ka = 0.35959;
 
-inline constexpr double FFC_Ks = 0.0;
-inline constexpr double FFC_Kv = 0.0;
-inline constexpr double FFC_Ka = 0.0;
+inline constexpr double FFC_Ks = 0.22346;
+inline constexpr double FFC_Kv = 1.814;
+inline constexpr double FFC_Ka = 0.354;
 
 // PID CONSTANTS
-inline constexpr double FBA_P = 0.0;
+inline constexpr double FBA_P = 0.51; //0.51
 inline constexpr double FBA_I = 0.0;
 inline constexpr double FBA_D = 0.0;
 
-inline constexpr double FBB_P = 0.0;
+inline constexpr double FBB_P = 0.89898; // 0.89898
 inline constexpr double FBB_I = 0.0;
 inline constexpr double FBB_D = 0.0;
 
-inline constexpr double FBC_P = 0.0;
+inline constexpr double FBC_P = 0.98847; //0.98847
 inline constexpr double FBC_I = 0.0;
 inline constexpr double FBC_D = 0.0;
 
