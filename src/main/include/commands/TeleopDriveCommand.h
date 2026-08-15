@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <frc/kinematics/ChassisSpeeds.h>
 #include <frc2/command/Command.h>
 #include <frc2/command/CommandHelper.h>
 #include <frc2/command/button/CommandXboxController.h>
@@ -23,7 +24,6 @@ class TeleopDriveCommand
     : public frc2::CommandHelper<frc2::Command, TeleopDriveCommand> {
  public:
   /**
-   * Creates a new ExampleCommand.
    *
    * @param subsystem The subsystem used by this command.
    */
@@ -35,12 +35,13 @@ class TeleopDriveCommand
  private:
   DriveSubsystem* m_drive;
   frc2::CommandXboxController* m_controller;
-  struct Polar {double magnitude; units::radian_t angle; };
-  struct Cart {double x; double y; };
+  frc::ChassisSpeeds m_commandSpeeds;
+  struct Polar {double magnitude; units::radian_t angle; double rot; };
+  struct Frame {double x; double y; double rot; };
 
   double ApplyDeadband(double mag, double deadband);
   double ApplyCurve(double mag, double curve);
-  Polar PolarOut(const Cart& cart);
-  Cart CartOut(const Polar& polar);
+  Polar PolarOut(const Frame& frame);
+  frc::ChassisSpeeds CartOut(const Polar& polar);
 
 };

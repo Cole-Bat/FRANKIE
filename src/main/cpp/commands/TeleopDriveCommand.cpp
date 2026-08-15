@@ -2,7 +2,9 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
+#include <frc/kinematics/ChassisSpeeds.h>
 #include "commands/TeleopDriveCommand.h"
+#include <units/velocity.h>
 
 #include "cmath"
 #include "units/math.h"
@@ -16,35 +18,43 @@ TeleopDriveCommand::TeleopDriveCommand(DriveSubsystem* drive, frc2::CommandXboxC
 
 void TeleopDriveCommand::Execute(){
   
-  Cart raw_xy { m_controller->GetLeftX(), m_controller->GetLeftY()};
+  Frame raw_xyrot { m_controller->GetLeftX(), m_controller->GetLeftY(), m_controller-> GetRightX()};
+  // x and y are swapped with negatives to match the field coord system
+  Frame robot_xyrot { -raw_xyrot.y, -raw_xyrot.x, raw_xyrot.rot};
+  
+  Polar pol_xyrot = PolarOut(robot_xyrot);
+  pol_xyrot.magnitude = ApplyDeadband(pol_xyrot.magnitude, OperatorConstants::DeadbandValue);
+  pol_xyrot.rot = ApplyDeadband(pol_xyrot.rot, OperatorConstants::DeadbandValue);
+  pol_xyrot.magnitude = ApplyCurve(pol_xyrot.magnitude, OperatorConstants::DriveCurve);
+  pol_xyrot.rot = ApplyCurve(pol_xyrot.rot, OperatorConstants::DriveCurve);
+  frc::ChassisSpeeds m_commandSpeeds = CartOut(pol_xyrot);
 
-  Polar pol_xy = PolarOut(raw_xy);
-  pol_xy.magnitude = ApplyDeadband(pol_xy.magnitude, OperatorConstants::DeadbandValue);
-  pol_xy.magnitude = ApplyCurve(pol_xy.magnitude, OperatorConstants::DriveCurve);
-  Cart final_xy = CartOut(pol_xy);
-  double final_z = ApplyCurve(m_controller-> GetRightX(), OperatorConstants::RotCurve);
-
-  m_drive->Drive(final_xy.x, final_xy.y, final_z);
+  m_drive->Drive(m_commandSpeeds);
 
 }
 
-TeleopDriveCommand::Polar TeleopDriveCommand::PolarOut(const Cart& cart) {
-    return {std::hypot(cart.x, cart.y), 
-      units::radian_t{std::atan2(cart.y, cart.x)}};
+TeleopDriveCommand::Polar TeleopDriveCommand::PolarOut(const Frame& frame) {
+    return {std::hypot(frame.x, frame.y), 
+      units::radian_t{std::atan2(frame.y, frame.x)}, frame.rot};
 }
 
-TeleopDriveCommand::Cart TeleopDriveCommand::CartOut(const Polar& polar) {
-    return {units::math::cos(polar.angle) * polar.magnitude,
-      units::math::sin(polar.angle) * polar.magnitude};
+frc::ChassisSpeeds TeleopDriveCommand::CartOut(const Polar& polar) {
+    
+  units::velocity::meters_per_second_t vx{units::math::cos(polar.angle) * polar.magnitude};
+  units::velocity::meters_per_second_t vy{units::math::sin(polar.angle) * polar.magnitude};
+  units::angular_velocity::radians_per_second_t omega{polar.rot};
+
+  return { vx, vy, omega};
+
 }
 
 double TeleopDriveCommand::ApplyDeadband(double mag, double deadband) {
-    if (mag < deadband) return 0.0;
-    return (mag - deadband) / (1.0 - deadband);
+    if (std::abs(mag) < deadband) return 0.0;
+    return std::copysign((std::abs(mag) - deadband) / (1.0 - deadband), mag);
 }
 
 double TeleopDriveCommand::ApplyCurve(double mag, double curve) {
-    return std::pow(mag, curve);
+    return std::copysign(std::pow(std::abs(mag), curve), mag);
 }
 
 bool TeleopDriveCommand::IsFinished() {
