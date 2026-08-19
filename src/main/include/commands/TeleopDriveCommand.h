@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <util/Kinematics.h>
 #include <frc/kinematics/ChassisSpeeds.h>
 #include <frc2/command/Command.h>
 #include <frc2/command/CommandHelper.h>
@@ -11,7 +12,7 @@
 
 #include "subsystems/DriveSubsystem.h"
 #include "Constants.h"
-#include "units/angle.h"
+
 
 /**
  * An example command that uses an example subsystem.
@@ -35,13 +36,12 @@ class TeleopDriveCommand
  private:
   DriveSubsystem* m_drive;
   frc2::CommandXboxController* m_controller;
+
+  kn::KiwiKinematics m_kinematics;
+  
   frc::ChassisSpeeds m_commandSpeeds;
-  struct Polar {double magnitude; units::radian_t angle; double rot; };
-  struct Frame {double x; double y; double rot; };
 
   double ApplyDeadband(double mag, double deadband);
   double ApplyCurve(double mag, double curve);
-  Polar PolarOut(const Frame& frame);
-  frc::ChassisSpeeds CartOut(const Polar& polar);
-
+  
 };

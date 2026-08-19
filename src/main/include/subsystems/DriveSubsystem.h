@@ -5,6 +5,7 @@
 #pragma once
 
 #include <frc/geometry/Pose2d.h>
+#include <frc/geometry/Twist2d.h>
 #include <frc/kinematics/ChassisSpeeds.h>
 #include <frc/smartdashboard/Field2d.h>
 #include <frc/smartdashboard/SmartDashboard.h>
@@ -20,6 +21,7 @@
 
 #include "units/time.h"
 
+#include <util/Kinematics.h>
 #include "Constants.h"
 #include <array>
 
@@ -32,12 +34,15 @@ class DriveSubsystem : public frc2::SubsystemBase {
   frc2::CommandPtr SysIdDynamic(frc2::sysid::Direction direction);
 
   void ConfigureControllers();
+  void ConfigureParameters();
   
-  void Drive(const frc::ChassisSpeeds& speeds);
+  void Drive(const double vx, const double vy, const double rot);
   /**
    * Will be called periodically whenever the CommandScheduler runs.
    */
   
+  void autoDrive(const frc::ChassisSpeeds& autoDriveSpeeds);
+
   void Periodic() override;
   // put something about the pose here
   /**
@@ -47,6 +52,7 @@ class DriveSubsystem : public frc2::SubsystemBase {
   void SimulationPeriodic() override;
 
   // Pose for the SIM
+  frc::Twist2d m_Twist2dsim;
   frc::Pose2d m_Pose2dSim;
   frc::Field2d m_field;
 
@@ -59,12 +65,18 @@ class DriveSubsystem : public frc2::SubsystemBase {
 
  private:
   
-  struct WheelDouble {double a; double b; double c; };
-  WheelDouble m_wheelSpeeds;
+  kn::KiwiKinematics m_kinematics;
+
+  double m_velocityConversionFactor;
+  double m_positionConversionFactor;
+  double m_maxRobotVelocity;
+  double m_maxRobotVelocityX;
+  double m_maxRobotVelocityY;
+  double m_maxRobotVelocityOmega;
+  
+  kn::KiwiKinematics::WheelDouble m_wheelSpeeds;
   frc::ChassisSpeeds m_driveSpeeds; 
   std::array<double, 3> m_wheelSpeedArray{}; 
-  std::array<double, 3> InverseKinematics(const frc::ChassisSpeeds& driveSpeeds);
-  WheelDouble NormalizedKinematics(const std::array<double, 3>& vector);
 
   void KiwiPoseEstimator(const double va, const double vb, const double vc, const double radius);
 

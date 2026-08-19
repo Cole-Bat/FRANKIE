@@ -3,7 +3,9 @@
 // the WPILib BSD license file in the root directory of this project.
 
 #include "subsystems/DriveSubsystem.h"
+#include <util/Kinematics.h>
 #include <frc/geometry/Pose2d.h>
+#include <frc/geometry/Twist2d.h>
 #include <frc/kinematics/ChassisSpeeds.h>
 #include <frc/smartdashboard/Field2d.h>
 #include <frc/smartdashboard/SmartDashboard.h>
@@ -19,12 +21,12 @@
 #include <array>
 
 DriveSubsystem::DriveSubsystem()  // Initialization area for private member variables
-  : m_motorALead{ OperatorConstants::MotorALeadID, rev::spark::SparkLowLevel::MotorType::kBrushless},
-    m_motorBLead{ OperatorConstants::MotorBLeadID, rev::spark::SparkLowLevel::MotorType::kBrushless},
-    m_motorCLead{ OperatorConstants::MotorCLeadID, rev::spark::SparkLowLevel::MotorType::kBrushless},
-    m_motorAFollow{ OperatorConstants::MotorAFollowID, rev::spark::SparkLowLevel::MotorType::kBrushless},
-    m_motorBFollow{ OperatorConstants::MotorBFollowID, rev::spark::SparkLowLevel::MotorType::kBrushless},
-    m_motorCFollow{ OperatorConstants::MotorCFollowID, rev::spark::SparkLowLevel::MotorType::kBrushless},
+  : m_motorALead{ Constants::MotorALeadID, rev::spark::SparkLowLevel::MotorType::kBrushless},
+    m_motorBLead{ Constants::MotorBLeadID, rev::spark::SparkLowLevel::MotorType::kBrushless},
+    m_motorCLead{ Constants::MotorCLeadID, rev::spark::SparkLowLevel::MotorType::kBrushless},
+    m_motorAFollow{ Constants::MotorAFollowID, rev::spark::SparkLowLevel::MotorType::kBrushless},
+    m_motorBFollow{ Constants::MotorBFollowID, rev::spark::SparkLowLevel::MotorType::kBrushless},
+    m_motorCFollow{ Constants::MotorCFollowID, rev::spark::SparkLowLevel::MotorType::kBrushless},
     m_wheelAEncoder{ m_motorALead.GetEncoder()},
     m_wheelBEncoder{ m_motorBLead.GetEncoder()},
     m_wheelCEncoder{ m_motorCLead.GetEncoder()},
@@ -60,6 +62,7 @@ DriveSubsystem::DriveSubsystem()  // Initialization area for private member vari
     )
 
 { //Constructor for Drivesystem public
+  ConfigureParameters();
   ConfigureControllers();
   frc::SmartDashboard::PutData("Field", &m_field);
   auto inst = nt::NetworkTableInstance::GetDefault();
@@ -81,69 +84,53 @@ void DriveSubsystem::Periodic() {
 
 void DriveSubsystem::SimulationPeriodic() {
   // Implementation of subsystem simulation periodic method goes here.
-  m_motorASim.SetVelocity(m_wheelSpeeds.a * double(OperatorConstants::maxRobotVelocity));
-  m_motorBSim.SetVelocity(m_wheelSpeeds.b * double(OperatorConstants::maxRobotVelocity));
-  m_motorCSim.SetVelocity(m_wheelSpeeds.c * double(OperatorConstants::maxRobotVelocity));
+  m_motorASim.SetVelocity(m_wheelSpeeds.a);
+  m_motorBSim.SetVelocity(m_wheelSpeeds.b);
+  m_motorCSim.SetVelocity(m_wheelSpeeds.c);
   
   m_aPubSim.Set(m_motorASim.GetVelocity());
   m_bPubSim.Set(m_motorBSim.GetVelocity());
   m_cPubSim.Set(m_motorCSim.GetVelocity());
   
-  KiwiPoseEstimator(m_motorASim.GetVelocity(), m_motorBSim.GetVelocity(), m_motorCSim.GetVelocity(), OperatorConstants::WheelPosRadius);
+  //KiwiPoseEstimator(m_motorASim.GetVelocity(), m_motorBSim.GetVelocity(), m_motorCSim.GetVelocity(), double(Constants::driveWheelPosition));
+  
+  units::length::meter_t dX = m_driveSpeeds.vx * Constants::dtLoop;
+  units::length::meter_t dY = m_driveSpeeds.vy * Constants::dtLoop;
+  units::angle::radian_t dtheta = -m_driveSpeeds.omega * Constants::dtLoop;
+
+  m_Twist2dsim = {dX, dY, dtheta};
+  m_Pose2dSim = m_Pose2dSim.Exp(m_Twist2dsim);
+
   m_field.SetRobotPose(m_Pose2dSim);
 }
 
-void DriveSubsystem::Drive(const frc::ChassisSpeeds& speeds) {
+void DriveSubsystem::Drive(const double vx, const double vy, const double rot) {
 
   // might want a teleop drive and an auto drive
   // need controller objects and set reference for the auto drive
+  //  inital runtime characteristic variables set
 
-  m_driveSpeeds = speeds;
+  m_driveSpeeds = m_kinematics.convertPercentToSpeeds_kiwi(vx, vy, rot, m_maxRobotVelocityX, m_maxRobotVelocityY, m_maxRobotVelocityOmega);
   
-  m_wheelSpeedArray = InverseKinematics(speeds);
-  m_wheelSpeeds = NormalizedKinematics(m_wheelSpeedArray);
+  m_wheelSpeedArray = m_kinematics.inverseKinematics(m_driveSpeeds);
+  m_wheelSpeeds = m_kinematics.NormalizedKinematics(m_wheelSpeedArray, m_maxRobotVelocity);
   
   //Set requires Duty Cycle values
-  m_motorALead.Set(m_wheelSpeeds.a / OperatorConstants::maxRobotVelocity.value());
-  m_motorBLead.Set(m_wheelSpeeds.b / OperatorConstants::maxRobotVelocity.value());
-  m_motorCLead.Set(m_wheelSpeeds.c / OperatorConstants::maxRobotVelocity.value());
+  m_motorALead.Set(m_wheelSpeeds.a / m_maxRobotVelocity);
+  m_motorBLead.Set(m_wheelSpeeds.b / m_maxRobotVelocity);
+  m_motorCLead.Set(m_wheelSpeeds.c / m_maxRobotVelocity);
 }
 
-std::array<double, 3> DriveSubsystem::InverseKinematics(const frc::ChassisSpeeds& driveSpeeds) {
+void DriveSubsystem::autoDrive(const frc::ChassisSpeeds& autoDriveSpeeds) {
+
   
-  //create kinematics util folder maybe
-  //also need a forward kinematics function
-
-  constexpr double degToRad = std::numbers::pi / 180;
-
-  return {double(driveSpeeds.vx * std::cos(OperatorConstants::WheelATheta * degToRad) + 
-                 driveSpeeds.vy * std::sin(OperatorConstants::WheelATheta * degToRad) + 
-                units::velocity::meters_per_second_t{(driveSpeeds.omega.value() * OperatorConstants::WheelPosRadius)}),
-
-          double(driveSpeeds.vx * std::cos(OperatorConstants::WheelBTheta * degToRad) + 
-                 driveSpeeds.vy * std::sin(OperatorConstants::WheelBTheta * degToRad) + 
-                units::velocity::meters_per_second_t{(driveSpeeds.omega.value() * OperatorConstants::WheelPosRadius)}),
-          
-          double(driveSpeeds.vx * std::cos(OperatorConstants::WheelCTheta * degToRad) + 
-                 driveSpeeds.vy * std::sin(OperatorConstants::WheelCTheta * degToRad) + 
-                units::velocity::meters_per_second_t{(driveSpeeds.omega.value() * OperatorConstants::WheelPosRadius)})
-  };
-
-}
-
-DriveSubsystem::WheelDouble DriveSubsystem::NormalizedKinematics(const std::array<double, 3>& vector) {
-
-  auto maxIterator = std::max_element(vector.begin(), vector.end(), [] (double a, double b) {
-    return std::abs(a) < std:: abs(b);
-  });
-  double maxSpeed = std::abs(*maxIterator);
+  m_wheelSpeedArray = m_kinematics.inverseKinematics(autoDriveSpeeds);
+  m_wheelSpeeds = m_kinematics.NormalizedKinematics(m_wheelSpeedArray, m_maxRobotVelocity);
   
-  if (maxSpeed > OperatorConstants::maxRobotVelocity.value()) 
-  return {vector[0] * ( OperatorConstants::maxRobotVelocity.value() / maxSpeed ),
-          vector[1] * ( OperatorConstants::maxRobotVelocity.value() / maxSpeed ),
-          vector[2] * ( OperatorConstants::maxRobotVelocity.value() / maxSpeed )};
-
-  return {vector[0], vector[1], vector[2]};
+  //Set requires Duty Cycle values
+  m_motorALead.Set(m_wheelSpeeds.a / m_maxRobotVelocity);
+  m_motorBLead.Set(m_wheelSpeeds.b / m_maxRobotVelocity);
+  m_motorCLead.Set(m_wheelSpeeds.c / m_maxRobotVelocity);
 
 }
 
@@ -159,10 +146,8 @@ void DriveSubsystem::KiwiPoseEstimator(const double va, const double vb, const d
 
 
   double degToRad = std::numbers::pi / 180;
-  double pCF = (OperatorConstants::WheelDiaMeter * std::numbers::pi) / OperatorConstants::DriveGearRatio;
-  units::velocity::meters_per_second_t vCF{pCF / 60.0}; //number of seconds in a minute for m/s
   units::length::meter_t radius_m{radius};
-  units::time::second_t dt{OperatorConstants::dtLoop};
+  units::time::second_t dt{Constants::dtLoop};
 
   units::velocity::meters_per_second_t velocityA{va};
   units::velocity::meters_per_second_t velocityB{vb};
@@ -170,56 +155,59 @@ void DriveSubsystem::KiwiPoseEstimator(const double va, const double vb, const d
   units::velocity::meters_per_second_t velocityRot = (velocityA + velocityB + velocityC) / 3.0;
 
   units::velocity::meters_per_second_t velocityVectorX = 
-        (velocityA - velocityRot) * cos(OperatorConstants::WheelATheta * degToRad) +
-        (velocityB - velocityRot) * cos(OperatorConstants::WheelBTheta * degToRad) +
-        (velocityC - velocityRot) * cos(OperatorConstants::WheelCTheta * degToRad);
+        (velocityA - velocityRot) * cos(Constants::WheelATheta * degToRad) +
+        (velocityB - velocityRot) * cos(Constants::WheelBTheta * degToRad) +
+        (velocityC - velocityRot) * cos(Constants::WheelCTheta * degToRad);
   
   units::velocity::meters_per_second_t velocityVectorY = 
-        (velocityA - velocityRot) * sin(OperatorConstants::WheelATheta * degToRad) +
-        (velocityB - velocityRot) * sin(OperatorConstants::WheelBTheta * degToRad) +
-        (velocityC - velocityRot) * sin(OperatorConstants::WheelCTheta * degToRad);
+        (velocityA - velocityRot) * sin(Constants::WheelATheta * degToRad) +
+        (velocityB - velocityRot) * sin(Constants::WheelBTheta * degToRad) +
+        (velocityC - velocityRot) * sin(Constants::WheelCTheta * degToRad);
  
   units::angular_velocity::radians_per_second_t velocityW{-(velocityRot / radius_m).value()};
 
-  units::length::meter_t dX = velocityVectorX * dt;
-  units::length::meter_t dY = velocityVectorY * dt;
-  units::angle::radian_t dtheta = velocityW * dt;
 
-  // frc::Translation2d robotTranslation{dX, dY};
-  // frc::Translation2d fieldTranslation = robotTranslation.RotateBy(m_Pose2dSim.Rotation());
 
-  m_Pose2dSim = m_Pose2dSim + frc::Transform2d{dX, dY, frc::Rotation2d(dtheta)};
-  // m_Pose2dSim =  frc::Pose2d {
-  //   m_Pose2dSim.Translation() + fieldTranslation,
-  //   m_Pose2dSim.Rotation() + frc::Rotation2d{dtheta}
-  // };
+}
+
+void DriveSubsystem::ConfigureParameters(){
+
+//  need to get max rpm under load
+
+  m_positionConversionFactor = m_kinematics.getCF(Constants::driveWheelDiameter, Constants::DriveGearRatio, kn::KiwiKinematics::position);
+
+  m_velocityConversionFactor = m_kinematics.getCF(Constants::driveWheelDiameter, Constants::DriveGearRatio, kn::KiwiKinematics::velocity);
+
+  m_maxRobotVelocityX = m_kinematics.maxRobotVelocityX_kiwi( m_velocityConversionFactor, Constants::max_rpm);
+  
+  m_maxRobotVelocityY = m_kinematics.maxRobotVelocityY_kiwi( m_velocityConversionFactor, Constants::max_rpm);         
+
+  m_maxRobotVelocityOmega = m_kinematics.maxRobotVelocityOmega_kiwi( m_velocityConversionFactor, Constants::max_rpm, Constants::driveWheelPosition);
+  
+  m_maxRobotVelocity = m_maxRobotVelocityY;
 
 }
 
 void DriveSubsystem::ConfigureControllers() {
   
-  //Conversion Factors based on 8 inch wheels with 10.71:1 Gear Ratio
-  double positionConversionFactor = (OperatorConstants::WheelDiaMeter * std::numbers::pi) / OperatorConstants::DriveGearRatio;
-  double velocityConversionFactor = positionConversionFactor / 60.0; //number of seconds in a minute for m/s
-  
   //everything configured in one object for wheel A
   rev::spark::SparkMaxConfig ALConfig;
     //Voltage compensation for when voltage dips
-    ALConfig.VoltageCompensation(OperatorConstants::nominalVoltage);
+    ALConfig.VoltageCompensation(Constants::nominalVoltage);
     
     //FeedForward Controller Constants
     ALConfig.closedLoop.feedForward
-        .kS(OperatorConstants::FFA_Ks)
-        .kV(OperatorConstants::FFA_Kv)
-        .kA(OperatorConstants::FFA_Ka);
+        .kS(Constants::FFA_Ks)
+        .kV(Constants::FFA_Kv)
+        .kA(Constants::FFA_Ka);
     
     //Feedback Controller Constants    
-    ALConfig.closedLoop.Pid(OperatorConstants::FBA_P, OperatorConstants::FBA_I, OperatorConstants::FBA_D);
+    ALConfig.closedLoop.Pid(Constants::FBA_P, Constants::FBA_I, Constants::FBA_D);
     
     //Encoder Conversion Factors
     ALConfig.encoder
-        .PositionConversionFactor(positionConversionFactor)
-        .VelocityConversionFactor(velocityConversionFactor);
+        .PositionConversionFactor(m_positionConversionFactor)
+        .VelocityConversionFactor(m_velocityConversionFactor);
   
   rev::spark::SparkMaxConfig AFConfig;
     AFConfig.Follow(m_motorALead,false);
@@ -230,21 +218,21 @@ void DriveSubsystem::ConfigureControllers() {
   //everything configured in one object for wheel B
   rev::spark::SparkMaxConfig BLConfig;
     //Voltage compensation for when voltage dips
-    BLConfig.VoltageCompensation(OperatorConstants::nominalVoltage);
+    BLConfig.VoltageCompensation(Constants::nominalVoltage);
     
     //FeedForward Controller Constants
     BLConfig.closedLoop.feedForward
-        .kS(OperatorConstants::FFB_Ks)
-        .kV(OperatorConstants::FFB_Kv)
-        .kA(OperatorConstants::FFB_Ka);
+        .kS(Constants::FFB_Ks)
+        .kV(Constants::FFB_Kv)
+        .kA(Constants::FFB_Ka);
     
     //Feedback Controller Constants
-    BLConfig.closedLoop.Pid(OperatorConstants::FBB_P, OperatorConstants::FBB_I, OperatorConstants::FBB_D);
+    BLConfig.closedLoop.Pid(Constants::FBB_P, Constants::FBB_I, Constants::FBB_D);
     
     //Encoder Conversion Factors
     BLConfig.encoder
-        .PositionConversionFactor(positionConversionFactor)
-        .VelocityConversionFactor(velocityConversionFactor);
+        .PositionConversionFactor(m_positionConversionFactor)
+        .VelocityConversionFactor(m_velocityConversionFactor);
   
   rev::spark::SparkMaxConfig BFConfig;
     BFConfig.Follow(m_motorBLead,false);
@@ -255,21 +243,21 @@ void DriveSubsystem::ConfigureControllers() {
   //everything configured in one object for wheel C
   rev::spark::SparkMaxConfig CLConfig;
     //Voltage compensation for when voltage dips
-    CLConfig.VoltageCompensation(OperatorConstants::nominalVoltage);
+    CLConfig.VoltageCompensation(Constants::nominalVoltage);
     
     //FeedForward Controller Constants
     CLConfig.closedLoop.feedForward
-        .kS(OperatorConstants::FFC_Ks)
-        .kV(OperatorConstants::FFC_Kv)
-        .kA(OperatorConstants::FFC_Ka);
+        .kS(Constants::FFC_Ks)
+        .kV(Constants::FFC_Kv)
+        .kA(Constants::FFC_Ka);
     
     //Feedback Controller Constants
-    CLConfig.closedLoop.Pid(OperatorConstants::FBC_P, OperatorConstants::FBC_I, OperatorConstants::FBC_D);
+    CLConfig.closedLoop.Pid(Constants::FBC_P, Constants::FBC_I, Constants::FBC_D);
     
     //Encoder Conversion Factors
     CLConfig.encoder
-        .PositionConversionFactor(positionConversionFactor)
-        .VelocityConversionFactor(velocityConversionFactor);
+        .PositionConversionFactor(m_positionConversionFactor)
+        .VelocityConversionFactor(m_velocityConversionFactor);
   
   rev::spark::SparkMaxConfig CFConfig;
     CFConfig.Follow(m_motorCLead,false);

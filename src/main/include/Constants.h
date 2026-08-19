@@ -16,7 +16,7 @@
  * they are needed.
  */
 
-namespace OperatorConstants {
+namespace Constants {
 
 // CONTROLLER CONSTANTS
 inline constexpr int kDriverControllerPort = 0;
@@ -66,17 +66,14 @@ inline constexpr double FBC_D = 0.0;
 inline constexpr double WheelATheta = 90.0;
 inline constexpr double WheelBTheta = 210.0;
 inline constexpr double WheelCTheta = 330.0;
-inline constexpr double WheelDiaMeter = 0.2032; // 8inch wheel in meters
+inline constexpr units::length::meter_t driveWheelDiameter{0.2032};
 inline constexpr double DriveGearRatio = 10.71; // 10.71:1 toughbox mini
-inline constexpr double WheelPosRadius = 0.25; // in meters to the center also equal for all 3 wheels
-inline constexpr units::velocity::meters_per_second_t maxRobotVelocity{1.6154}; // (m/s) 
-inline constexpr units::velocity::meters_per_second_t maxRobotVelocityX{1.3989}; // (m/s)
-inline constexpr units::velocity::meters_per_second_t maxRobotVelocityY{1.6154}; // (m/s)
-inline constexpr units::angular_velocity::radians_per_second_t maxRobotVelocityOmega{6.4614}; // (rad/s)
+inline constexpr units::length::meter_t driveWheelPosition{0.25};
+inline constexpr double max_rpm = 5000;
 
 
 // ELECTRICAL CONSTANTS
 inline constexpr double nominalVoltage = 12.0;
-inline constexpr double dtLoop = 0.020; //seconds that the periodic function is called
+inline constexpr units::time::second_t dtLoop{0.020}; //seconds that the periodic function is called
 
-}  // namespace OperatorConstants
+}  // namespace Constants
