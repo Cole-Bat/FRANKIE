@@ -9,6 +9,7 @@
 #include <frc/kinematics/ChassisSpeeds.h>
 #include <frc/smartdashboard/Field2d.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/filter/SlewRateLimiter.h>
 #include <frc2/command/sysid/SysIdRoutine.h>
 #include <rev/config/SparkMaxConfig.h>
 #include <networktables/NetworkTable.h>
@@ -35,12 +36,12 @@ DriveSubsystem::DriveSubsystem()  // Initialization area for private member vari
     m_motorBSim{ &m_motorBLead, &m_neoMotors},
     m_motorCSim{ &m_motorCLead, &m_neoMotors},
     m_sysIdRoutine(
-      frc2::sysid::Config {1_V / 1_s, 7_V, 10_s, nullptr},
+      frc2::sysid::Config {1_V / 1_s, 7_V, 10_s, nullptr}, // (test lower max dynamic voltages to limit traction loss)
       frc2::sysid::Mechanism {
         [this] (units::volt_t voltage) {
-          m_motorALead.SetVoltage(voltage);
+          m_motorALead.SetVoltage(voltage * -0.5);
           m_motorBLead.SetVoltage(voltage * -0.5); 
-          m_motorCLead.SetVoltage(voltage * -0.5); 
+          m_motorCLead.SetVoltage(voltage); 
         }, 
         [this](frc::sysid::SysIdRoutineLog* log) {
           // bus voltage * applied output to get the voltage at the motor
@@ -106,11 +107,9 @@ void DriveSubsystem::SimulationPeriodic() {
 
 void DriveSubsystem::Drive(const double vx, const double vy, const double rot) {
 
-  // might want a teleop drive and an auto drive
-  // need controller objects and set reference for the auto drive
-  //  inital runtime characteristic variables set
 
-  m_driveSpeeds = m_kinematics.convertPercentToSpeeds_kiwi(vx, vy, rot, m_maxRobotVelocityX, m_maxRobotVelocityY, m_maxRobotVelocityOmega);
+  m_driveSpeeds = m_kinematics.convertPercentToSpeeds_kiwi(m_filterX.Calculate(vx), m_filterY.Calculate(vy), 
+                  rot, m_maxRobotVelocityX, m_maxRobotVelocityY, m_maxRobotVelocityOmega);
   
   m_wheelSpeedArray = m_kinematics.inverseKinematics(m_driveSpeeds);
   m_wheelSpeeds = m_kinematics.NormalizedKinematics(m_wheelSpeedArray, m_maxRobotVelocity);
@@ -204,7 +203,7 @@ void DriveSubsystem::ConfigureControllers() {
     //Feedback Controller Constants    
     ALConfig.closedLoop.Pid(Constants::FBA_P, Constants::FBA_I, Constants::FBA_D);
     
-    //Encoder Conversion Factors
+    // //Encoder Conversion Factors
     ALConfig.encoder
         .PositionConversionFactor(m_positionConversionFactor)
         .VelocityConversionFactor(m_velocityConversionFactor);
@@ -212,8 +211,8 @@ void DriveSubsystem::ConfigureControllers() {
   rev::spark::SparkMaxConfig AFConfig;
     AFConfig.Follow(m_motorALead,false);
 
-  m_motorALead.Configure(ALConfig, rev::ResetMode::kNoResetSafeParameters, rev::PersistMode::kNoPersistParameters);
-  m_motorAFollow.Configure(AFConfig, rev::ResetMode::kNoResetSafeParameters, rev::PersistMode::kNoPersistParameters);  
+  m_motorALead.Configure(ALConfig, rev::ResetMode::kNoResetSafeParameters, rev::PersistMode::kPersistParameters);
+  m_motorAFollow.Configure(AFConfig, rev::ResetMode::kNoResetSafeParameters, rev::PersistMode::kPersistParameters);  
 
   //everything configured in one object for wheel B
   rev::spark::SparkMaxConfig BLConfig;
@@ -262,7 +261,7 @@ void DriveSubsystem::ConfigureControllers() {
   rev::spark::SparkMaxConfig CFConfig;
     CFConfig.Follow(m_motorCLead,false);
   
-  m_motorCLead.Configure(CLConfig, rev::ResetMode::kNoResetSafeParameters, rev::PersistMode::kNoPersistParameters);
-  m_motorCFollow.Configure(CFConfig, rev::ResetMode::kNoResetSafeParameters, rev::PersistMode::kNoPersistParameters);  
+  m_motorCLead.Configure(CLConfig, rev::ResetMode::kNoResetSafeParameters, rev::PersistMode::kPersistParameters);
+  m_motorCFollow.Configure(CFConfig, rev::ResetMode::kNoResetSafeParameters, rev::PersistMode::kPersistParameters);  
 
 }

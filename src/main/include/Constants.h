@@ -36,18 +36,18 @@ inline constexpr int MotorBFollowID = 10;
 inline constexpr int MotorCLeadID = 13;
 inline constexpr int MotorCFollowID = 14;
 
-// PLANT INVERSION CONSTANTS
-inline constexpr double FFA_Ks = 0.40068; 
-inline constexpr double FFA_Kv = 1.9736;
-inline constexpr double FFA_Ka = 0.1967;
+// PLANT INVERSION CONSTANTS  - test with finding these values when the coefficients are all 0
+inline constexpr double FFA_Ks = 0.36524; 
+inline constexpr double FFA_Kv = 1.9213;
+inline constexpr double FFA_Ka = 0.33809;
 
-inline constexpr double FFB_Ks = 0.26755;
-inline constexpr double FFB_Kv = 1.5894;
-inline constexpr double FFB_Ka = 0.35959;
+inline constexpr double FFB_Ks = 0.29449;
+inline constexpr double FFB_Kv = 2.2537;
+inline constexpr double FFB_Ka = 0.31933;
 
-inline constexpr double FFC_Ks = 0.22346;
-inline constexpr double FFC_Kv = 1.814;
-inline constexpr double FFC_Ka = 0.354;
+inline constexpr double FFC_Ks = 0.43398;
+inline constexpr double FFC_Kv = 1.9126;
+inline constexpr double FFC_Ka = 0.34168;
 
 // PID CONSTANTS
 inline constexpr double FBA_P = 0.51; //0.51

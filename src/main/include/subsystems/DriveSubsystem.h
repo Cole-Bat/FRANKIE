@@ -9,6 +9,7 @@
 #include <frc/kinematics/ChassisSpeeds.h>
 #include <frc/smartdashboard/Field2d.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/filter/SlewRateLimiter.h>
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/SubsystemBase.h>
 #include <frc2/command/sysid/SysIdRoutine.h>
@@ -66,6 +67,9 @@ class DriveSubsystem : public frc2::SubsystemBase {
  private:
   
   kn::KiwiKinematics m_kinematics;
+
+  frc::SlewRateLimiter<units::scalar> m_filterX{1.6 / 1_s};
+  frc::SlewRateLimiter<units::scalar> m_filterY{1.6 / 1_s};
 
   double m_velocityConversionFactor;
   double m_positionConversionFactor;
