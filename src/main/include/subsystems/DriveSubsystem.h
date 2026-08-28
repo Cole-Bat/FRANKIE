@@ -99,6 +99,12 @@ class DriveSubsystem : public frc2::SubsystemBase {
   rev::spark::SparkRelativeEncoder m_wheelBEncoder;
   rev::spark::SparkRelativeEncoder m_wheelCEncoder;
 
+  
+  // Closed Loop Controller 
+  rev::spark::SparkClosedLoopController m_controllerA;
+  rev::spark::SparkClosedLoopController m_controllerB;
+  rev::spark::SparkClosedLoopController m_controllerC;
+  
   // Motor Physics Model
   frc::DCMotor m_neoMotors;
 

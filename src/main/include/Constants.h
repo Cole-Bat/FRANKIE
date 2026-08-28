@@ -50,15 +50,15 @@ inline constexpr double FFC_Kv = 1.9126;
 inline constexpr double FFC_Ka = 0.34168;
 
 // PID CONSTANTS
-inline constexpr double FBA_P = 0.51; //0.51
+inline constexpr double FBA_P = 0.0; //0.51 - Double Check
 inline constexpr double FBA_I = 0.0;
 inline constexpr double FBA_D = 0.0;
 
-inline constexpr double FBB_P = 0.89898; // 0.89898
+inline constexpr double FBB_P = 0.0; // 0.89898 - double check
 inline constexpr double FBB_I = 0.0;
 inline constexpr double FBB_D = 0.0;
 
-inline constexpr double FBC_P = 0.98847; //0.98847
+inline constexpr double FBC_P = 0.0; //0.98847 - double check
 inline constexpr double FBC_I = 0.0;
 inline constexpr double FBC_D = 0.0;
 

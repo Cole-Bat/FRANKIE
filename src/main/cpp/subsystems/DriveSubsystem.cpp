@@ -31,6 +31,9 @@ DriveSubsystem::DriveSubsystem()  // Initialization area for private member vari
     m_wheelAEncoder{ m_motorALead.GetEncoder()},
     m_wheelBEncoder{ m_motorBLead.GetEncoder()},
     m_wheelCEncoder{ m_motorCLead.GetEncoder()},
+    m_controllerA{m_motorALead.GetClosedLoopController()},
+    m_controllerB{m_motorBLead.GetClosedLoopController()},
+    m_controllerC{m_motorCLead.GetClosedLoopController()},
     m_neoMotors{frc::DCMotor::NEO(2)},
     m_motorASim{ &m_motorALead, &m_neoMotors},
     m_motorBSim{ &m_motorBLead, &m_neoMotors},
@@ -114,10 +117,14 @@ void DriveSubsystem::Drive(const double vx, const double vy, const double rot) {
   m_wheelSpeedArray = m_kinematics.inverseKinematics(m_driveSpeeds);
   m_wheelSpeeds = m_kinematics.NormalizedKinematics(m_wheelSpeedArray, m_maxRobotVelocity);
   
+  m_controllerA.SetSetpoint(m_wheelSpeeds.a, rev::spark::SparkBase::ControlType::kVelocity);
+  m_controllerB.SetSetpoint(m_wheelSpeeds.b, rev::spark::SparkBase::ControlType::kVelocity);
+  m_controllerC.SetSetpoint(m_wheelSpeeds.c, rev::spark::SparkBase::ControlType::kVelocity);
+  
   //Set requires Duty Cycle values
-  m_motorALead.Set(m_wheelSpeeds.a / m_maxRobotVelocity);
-  m_motorBLead.Set(m_wheelSpeeds.b / m_maxRobotVelocity);
-  m_motorCLead.Set(m_wheelSpeeds.c / m_maxRobotVelocity);
+  // m_motorALead.Set(m_wheelSpeeds.a / m_maxRobotVelocity);
+  // m_motorBLead.Set(m_wheelSpeeds.b / m_maxRobotVelocity);
+  // m_motorCLead.Set(m_wheelSpeeds.c / m_maxRobotVelocity);
 }
 
 void DriveSubsystem::autoDrive(const frc::ChassisSpeeds& autoDriveSpeeds) {
