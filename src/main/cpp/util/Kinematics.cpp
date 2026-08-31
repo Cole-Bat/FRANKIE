@@ -82,5 +82,5 @@ double kn::KiwiKinematics::maxRobotVelocityY_kiwi(double vCF, double max_motor_r
 }
 
 double kn::KiwiKinematics::maxRobotVelocityOmega_kiwi(double vCF, double max_motor_rpm, units::length::meter_t wheelPosition){
-    return (vCF * max_motor_rpm / double(wheelPosition)); 
+    return ((vCF * max_motor_rpm) / double(wheelPosition)); 
 }

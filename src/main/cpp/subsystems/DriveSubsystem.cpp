@@ -39,12 +39,12 @@ DriveSubsystem::DriveSubsystem()  // Initialization area for private member vari
     m_motorBSim{ &m_motorBLead, &m_neoMotors},
     m_motorCSim{ &m_motorCLead, &m_neoMotors},
     m_sysIdRoutine(
-      frc2::sysid::Config {1_V / 1_s, 7_V, 10_s, nullptr}, // (test lower max dynamic voltages to limit traction loss)
+      frc2::sysid::Config {1_V / 1_s, 4_V, 10_s, nullptr}, // (test lower max dynamic voltages to limit traction loss)
       frc2::sysid::Mechanism {
         [this] (units::volt_t voltage) {
-          m_motorALead.SetVoltage(voltage * -0.5);
+          m_motorALead.SetVoltage(voltage);
           m_motorBLead.SetVoltage(voltage * -0.5); 
-          m_motorCLead.SetVoltage(voltage); 
+          m_motorCLead.SetVoltage(voltage * -0.5); 
         }, 
         [this](frc::sysid::SysIdRoutineLog* log) {
           // bus voltage * applied output to get the voltage at the motor
@@ -110,13 +110,14 @@ void DriveSubsystem::SimulationPeriodic() {
 
 void DriveSubsystem::Drive(const double vx, const double vy, const double rot) {
 
-
   m_driveSpeeds = m_kinematics.convertPercentToSpeeds_kiwi(m_filterX.Calculate(vx), m_filterY.Calculate(vy), 
                   rot, m_maxRobotVelocityX, m_maxRobotVelocityY, m_maxRobotVelocityOmega);
   
   m_wheelSpeedArray = m_kinematics.inverseKinematics(m_driveSpeeds);
   m_wheelSpeeds = m_kinematics.NormalizedKinematics(m_wheelSpeedArray, m_maxRobotVelocity);
+  printf("speed Array A: %f, speed Array B: %f, speed Array C: %f\n", m_wheelSpeeds.a,  m_wheelSpeeds.b,  m_wheelSpeeds.c);
   
+  //SetSetpooint requires control of a specific unit type
   m_controllerA.SetSetpoint(m_wheelSpeeds.a, rev::spark::SparkBase::ControlType::kVelocity);
   m_controllerB.SetSetpoint(m_wheelSpeeds.b, rev::spark::SparkBase::ControlType::kVelocity);
   m_controllerC.SetSetpoint(m_wheelSpeeds.c, rev::spark::SparkBase::ControlType::kVelocity);

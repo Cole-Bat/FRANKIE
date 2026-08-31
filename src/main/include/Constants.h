@@ -37,28 +37,28 @@ inline constexpr int MotorCLeadID = 13;
 inline constexpr int MotorCFollowID = 14;
 
 // PLANT INVERSION CONSTANTS  - test with finding these values when the coefficients are all 0
-inline constexpr double FFA_Ks = 0.36524; 
-inline constexpr double FFA_Kv = 1.9213;
-inline constexpr double FFA_Ka = 0.33809;
+inline constexpr double FFA_Ks = 0.1; // Set August 31 2026 0.35191 from sysID
+inline constexpr double FFA_Kv = 2.0524;
+inline constexpr double FFA_Ka = 0.22938;
 
-inline constexpr double FFB_Ks = 0.29449;
-inline constexpr double FFB_Kv = 2.2537;
-inline constexpr double FFB_Ka = 0.31933;
+inline constexpr double FFB_Ks = 0.1; // Set August 31 2026 0.3345 from sysID
+inline constexpr double FFB_Kv = 2.2631;
+inline constexpr double FFB_Ka = 0.19468;
 
-inline constexpr double FFC_Ks = 0.43398;
-inline constexpr double FFC_Kv = 1.9126;
-inline constexpr double FFC_Ka = 0.34168;
+inline constexpr double FFC_Ks = 0.1; // Set August 31 2026 0.34918 from sysID
+inline constexpr double FFC_Kv = 2.2184;
+inline constexpr double FFC_Ka = 0.18976;
 
 // PID CONSTANTS
-inline constexpr double FBA_P = 0.0; //0.51 - Double Check
+inline constexpr double FBA_P = 0.06; //0.487 - from sysID , 0.122
 inline constexpr double FBA_I = 0.0;
 inline constexpr double FBA_D = 0.0;
 
-inline constexpr double FBB_P = 0.0; // 0.89898 - double check
+inline constexpr double FBB_P = 0.06; // 0.442 - from sysID  0.111
 inline constexpr double FBB_I = 0.0;
 inline constexpr double FBB_D = 0.0;
 
-inline constexpr double FBC_P = 0.0; //0.98847 - double check
+inline constexpr double FBC_P = 0.06; //0.451 - from sysID , 0.113
 inline constexpr double FBC_I = 0.0;
 inline constexpr double FBC_D = 0.0;
 
