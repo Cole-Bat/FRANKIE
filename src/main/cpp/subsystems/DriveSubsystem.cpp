@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-#include "subsystems/DriveSubsystem.h"
+#include <subsystems/DriveSubsystem.h>
 #include <util/Kinematics.h>
 #include <frc/geometry/Pose2d.h>
 #include <frc/geometry/Twist2d.h>
@@ -77,6 +77,9 @@ DriveSubsystem::DriveSubsystem()  // Initialization area for private member vari
   m_aPubSim = table->GetDoubleTopic("Encoder A Sim").Publish();
   m_bPubSim = table->GetDoubleTopic("Encoder B Sim").Publish();
   m_cPubSim = table->GetDoubleTopic("Encoder C Sim").Publish();
+  m_wheelSetpointA = table->GetDoubleTopic("Wheel A Setpoint").Publish();
+  m_wheelSetpointB = table->GetDoubleTopic("Wheel B Setpoint").Publish();
+  m_wheelSetpointC = table->GetDoubleTopic("Wheel C Setpoint").Publish();
 }
 
 void DriveSubsystem::Periodic() {
@@ -84,6 +87,10 @@ void DriveSubsystem::Periodic() {
   m_aPubEncoder.Set(m_wheelAEncoder.GetVelocity());
   m_bPubEncoder.Set(m_wheelBEncoder.GetVelocity());
   m_cPubEncoder.Set(m_wheelCEncoder.GetVelocity());
+
+  m_wheelSetpointA.Set(m_wheelSpeeds.a);
+  m_wheelSetpointB.Set(m_wheelSpeeds.b);
+  m_wheelSetpointC.Set(m_wheelSpeeds.c);
 }
 
 void DriveSubsystem::SimulationPeriodic() {
