@@ -63,6 +63,9 @@ class DriveSubsystem : public frc2::SubsystemBase {
   nt::DoublePublisher m_aPubSim;
   nt::DoublePublisher m_bPubSim;
   nt::DoublePublisher m_cPubSim;
+  nt::DoublePublisher m_wheelSetpointA;
+  nt::DoublePublisher m_wheelSetpointB;
+  nt::DoublePublisher m_wheelSetpointC;
 
  private:
   
